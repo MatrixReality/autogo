@@ -13,11 +13,15 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/gpio"
 	"gobot.io/x/gobot/platforms/keyboard"
 	"gobot.io/x/gobot/platforms/raspi"
+
+	deviceD2r2 "github.com/d2r2/go-hd44780"
+	i2cD2r2 "github.com/d2r2/go-i2c"
 )
 
 /*
@@ -69,6 +73,41 @@ func main() {
 	motors[maIndex] = motorA
 	motors[mbIndex] = motorB
 
+	//TODO: use lcd i2c gobot solution to 16x2 screen
+	//lcd := gpio.NewHD44780Driver(r, 2, 16, gpio.HD44780_4BITMODE, "13", "15", dataPins)
+
+	//lcd := i2c.NewGroveLcdDriver(r, i2c.WithBus(2), i2c.WithAddress(0x27))
+	//lcd.SetPosition(0)
+
+	//-------------------------
+	//Another functional lcd lib
+	// Create new connection to i2c-bus on 2 line with address 0x27.
+	// Use i2cdetect utility to find device address over the i2c-bus
+	i2cD2r2, err := i2cD2r2.NewI2C(0x27, 3)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Free I2C connection on exit
+	defer i2cD2r2.Close()
+	// Construct lcd-device connected via I2C connection
+	lcdD2r2, err := deviceD2r2.NewLcd(i2cD2r2, deviceD2r2.LCD_16x2)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Turn on the backlight
+	err = lcdD2r2.BacklightOn()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Put text on 1 line of lcd-display
+	err = lcdD2r2.ShowMessage("AUTOGO    v0.0.1", deviceD2r2.SHOW_LINE_1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	//-------------------------
+
 	work := func() {
 		/*
 			motorA.Direction("forward")
@@ -90,21 +129,25 @@ func main() {
 				motorB.Direction("forward")
 				motorA.Speed(255)
 				motorB.Speed(255)
+				err = lcdD2r2.ShowMessage("Front", deviceD2r2.SHOW_LINE_2)
 			} else if key.Key == keyboard.S {
 				motorA.Direction("backward")
 				motorB.Direction("backward")
 				motorA.Speed(255)
 				motorB.Speed(255)
+				err = lcdD2r2.ShowMessage("Back", deviceD2r2.SHOW_LINE_2)
 			} else if key.Key == keyboard.A {
 				motorA.Direction("forward")
 				motorB.Direction("backward")
 				motorA.Speed(255)
 				motorB.Speed(255)
+				err = lcdD2r2.ShowMessage("Left", deviceD2r2.SHOW_LINE_2)
 			} else if key.Key == keyboard.D {
 				motorA.Direction("backward")
 				motorB.Direction("forward")
 				motorA.Speed(255)
 				motorB.Speed(255)
+				err = lcdD2r2.ShowMessage("Right", deviceD2r2.SHOW_LINE_2)
 			} else if key.Key == keyboard.Q {
 				motorA.Speed(0)
 				motorB.Speed(0)
@@ -117,12 +160,17 @@ func main() {
 	robot := gobot.NewRobot(
 		"my-robot",
 		[]gobot.Connection{r},
-		[]gobot.Device{motorA, motorB, keys},
+		[]gobot.Device{
+			motorA,
+			motorB,
+			keys,
+		},
 		work,
 	)
 
 	robot.Start()
 }
+
 /*
 func motorControl(idx int) {
 	m := motors[idx]
@@ -149,5 +197,5 @@ func motorControl(idx int) {
 			m.Direction("forward")
 		}
 	}
-*/
 }
+*/
