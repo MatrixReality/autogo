@@ -13,7 +13,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/gpio"
@@ -71,24 +70,44 @@ func main() {
 	motors[mbIndex] = motorB
 
 	work := func() {
-		motorA.Direction("forward")
-		motorB.Direction("backward")
+		/*
+			motorA.Direction("forward")
+			motorB.Direction("backward")
 
-		gobot.Every(40*time.Millisecond, func() {
-			motorControl(maIndex)
-		})
+			gobot.Every(40*time.Millisecond, func() {
+				motorControl(maIndex)
+			})
 
-		gobot.Every(20*time.Millisecond, func() {
-			motorControl(mbIndex)
-		})
-
+			gobot.Every(20*time.Millisecond, func() {
+				motorControl(mbIndex)
+			})
+		*/
 		keys.On(keyboard.Key, func(data interface{}) {
 			key := data.(keyboard.KeyEvent)
 
 			if key.Key == keyboard.W {
-				fmt.Println("W pressed!")
+				motorA.Direction("forward")
+				motorB.Direction("forward")
+				motorA.Speed(255)
+				motorB.Speed(255)
 			} else if key.Key == keyboard.S {
-				fmt.Println("S pressed!")
+				motorA.Direction("backward")
+				motorB.Direction("backward")
+				motorA.Speed(255)
+				motorB.Speed(255)
+			} else if key.Key == keyboard.A {
+				motorA.Direction("forward")
+				motorB.Direction("backward")
+				motorA.Speed(255)
+				motorB.Speed(255)
+			} else if key.Key == keyboard.D {
+				motorA.Direction("backward")
+				motorB.Direction("forward")
+				motorA.Speed(255)
+				motorB.Speed(255)
+			} else if key.Key == keyboard.Q {
+				motorA.Speed(0)
+				motorB.Speed(0)
 			} else {
 				fmt.Println("keyboard event!", key, key.Char)
 			}
@@ -104,12 +123,12 @@ func main() {
 
 	robot.Start()
 }
-
+/*
 func motorControl(idx int) {
 	m := motors[idx]
 
 	motorSpeed[idx] = byte(int(motorSpeed[idx]) + motorInc[idx])
-	// log.Infof("Setting %v speed to %v\n", m.Name(), motorSpeed[idx])
+	fmt.Println(motorSpeed[idx])
 	m.Speed(motorSpeed[idx])
 
 	counter[idx]++
@@ -130,4 +149,5 @@ func motorControl(idx int) {
 			m.Direction("forward")
 		}
 	}
+*/
 }
