@@ -14,11 +14,11 @@ package main
 import (
 	"fmt"
 	"log"
-	"net"
 	"strings"
 
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/gpio"
+	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/keyboard"
 	"gobot.io/x/gobot/platforms/raspi"
 
@@ -110,7 +110,21 @@ func main() {
 		log.Fatal(err)
 	}
 
+	pca9685 := i2c.NewPCA9685Driver(r,
+		i2c.WithBus(1),
+		i2c.WithAddress(0x40))
+
+	pan := gpio.NewServoDriver(pca9685, "0")
+	tilt := gpio.NewServoDriver(pca9685, "1")
+
 	work := func() {
+		pca9685.SetPWMFreq(60)
+
+		pan.SetName("pan")
+		tilt.SetName("tilt")
+		pan.Center()
+		tilt.Center()
+
 		keys.On(keyboard.Key, func(data interface{}) {
 			key := data.(keyboard.KeyEvent)
 
@@ -159,6 +173,8 @@ func main() {
 			motorA,
 			motorB,
 			keys,
+			pca9685,
+			pan,
 		},
 		work,
 	)
@@ -195,15 +211,16 @@ func lcdD2r2Factory() (*deviceD2r2.Lcd, func(), error) {
 }
 
 func GetOutboundIP() string {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
+	//conn, err := net.Dial("udp", "8.8.8.8:80")
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//defer conn.Close()
 
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	//localAddr := conn.LocalAddr().(*net.UDPAddr)
 
-	return localAddr.IP.String()
+	//return localAddr.IP.String()
+	return "1.1.1.1"
 }
 
 func rightPad(s string, padStr string, pLen int) string {
