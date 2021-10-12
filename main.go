@@ -12,13 +12,13 @@ package main
 // | 1      | 1     | 1     | Off           |
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"strings"
 
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/gpio"
+	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/keyboard"
 	"gobot.io/x/gobot/platforms/raspi"
 
@@ -50,6 +50,10 @@ const (
 const (
 	VERSION      = "v0.0.3"
 	LCD_COLLUMNS = 16
+)
+
+const (
+	panTiltFactor = 30
 )
 
 const (
@@ -105,37 +109,97 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = lcd.ShowMessage(VERSION+" w,a,s,d,q", deviceD2r2.SHOW_LINE_2)
+	err = lcd.ShowMessage(VERSION+" Arrow key", deviceD2r2.SHOW_LINE_2)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	servoDriver := i2c.NewPCA9685Driver(r,
+		i2c.WithBus(1),
+		i2c.WithAddress(0x40))
+
+	pan := gpio.NewServoDriver(servoDriver, "0")
+	tilt := gpio.NewServoDriver(servoDriver, "1")
+
+	pan.SetName("pan")
+	tilt.SetName("tilt")
+
+	tiltPos := make(map[string]int)
+	tiltPos["top"] = 0
+	tiltPos["horizon"] = 130
+	tiltPos["down"] = 180
+
+	panPos := make(map[string]int)
+	panPos["left"] = 180
+	panPos["right"] = 0
+
+	firstRun := 1
 	work := func() {
+		servoDriver.SetPWMFreq(60)
+		if firstRun == 1 {
+			firstRun = 0
+			pan.Center()
+			tilt.Move(uint8(tiltPos["horizon"]))
+		}
+
 		keys.On(keyboard.Key, func(data interface{}) {
 			key := data.(keyboard.KeyEvent)
 
+			panAngle := int(pan.CurrentAngle)
+			tiltAngle := int(tilt.CurrentAngle)
+
 			if key.Key == keyboard.W {
+				newTilt := tiltAngle - panTiltFactor
+				if newTilt < tiltPos["top"] {
+					newTilt = tiltPos["top"]
+				}
+				tilt.Move(uint8(newTilt))
+
+			} else if key.Key == keyboard.S {
+				newTilt := tiltAngle + panTiltFactor
+				if newTilt > tiltPos["down"] {
+					newTilt = tiltPos["down"]
+				}
+				tilt.Move(uint8(newTilt))
+
+			} else if key.Key == keyboard.A {
+				newPan := panAngle + panTiltFactor
+				if newPan > panPos["left"] {
+					newPan = panPos["left"]
+				}
+				pan.Move(uint8(newPan))
+
+			} else if key.Key == keyboard.D {
+				newPan := panAngle - panTiltFactor
+				if newPan < panPos["right"] {
+					newPan = panPos["right"]
+				}
+				pan.Move(uint8(newPan))
+
+			} else if key.Key == keyboard.X {
+				pan.Center()
+				tilt.Move(uint8(tiltPos["horizon"]))
+			}
+
+			if key.Key == keyboard.ArrowUp {
 				motorA.Direction("forward")
 				motorB.Direction("forward")
 				motorA.Speed(255)
 				motorB.Speed(255)
-				err := lcd.ShowMessage(rightPad("Front", " ", LCD_COLLUMNS), deviceD2r2.SHOW_LINE_2)
-				if err != nil {
-					log.Fatal(err)
-				}
-			} else if key.Key == keyboard.S {
+				lcd.ShowMessage(rightPad("Front", " ", LCD_COLLUMNS), deviceD2r2.SHOW_LINE_2)
+			} else if key.Key == keyboard.ArrowDown {
 				motorA.Direction("backward")
 				motorB.Direction("backward")
 				motorA.Speed(255)
 				motorB.Speed(255)
 				lcd.ShowMessage(rightPad("Back", " ", LCD_COLLUMNS), deviceD2r2.SHOW_LINE_2)
-			} else if key.Key == keyboard.A {
+			} else if key.Key == keyboard.ArrowRight {
 				motorA.Direction("forward")
 				motorB.Direction("backward")
 				motorA.Speed(255)
 				motorB.Speed(255)
 				lcd.ShowMessage(rightPad("Left", " ", LCD_COLLUMNS), deviceD2r2.SHOW_LINE_2)
-			} else if key.Key == keyboard.D {
+			} else if key.Key == keyboard.ArrowLeft {
 				motorA.Direction("backward")
 				motorB.Direction("forward")
 				motorA.Speed(255)
@@ -146,9 +210,12 @@ func main() {
 				motorB.Speed(0)
 				motorA.Direction("none")
 				motorB.Direction("none")
-			} else {
-				fmt.Println("keyboard event!", key, key.Char)
 			}
+			/*
+				else {
+					fmt.Println("keyboard event!", key, key.Char)
+				}
+			*/
 		})
 	}
 
@@ -159,6 +226,9 @@ func main() {
 			motorA,
 			motorB,
 			keys,
+			servoDriver,
+			pan,
+			tilt,
 		},
 		work,
 	)
@@ -197,7 +267,8 @@ func lcdD2r2Factory() (*deviceD2r2.Lcd, func(), error) {
 func GetOutboundIP() string {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
-		log.Fatal(err)
+		//log.Fatal(err)
+		return "ip offline"
 	}
 	defer conn.Close()
 
