@@ -158,6 +158,7 @@ func main() {
 			if key.Key == keyboard.B {
 				sonarData, err = getSonarData(arduinoConn)
 				if err == nil {
+					log.Println("///*********")
 					log.Println("///Print arduino sonar data::")
 					log.Println(sonarData)
 					log.Println("///*********")
@@ -313,8 +314,6 @@ func getSonarData(sonarConn i2c.Connection) (string, error) {
 	sonarData := ""
 	if bytesRead == sonarByteLen {
 		sonarData = string(buf[:])
-
-		log.Println(sonarData)
 	}
 	return sonarData, nil
 
