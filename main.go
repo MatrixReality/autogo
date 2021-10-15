@@ -88,32 +88,6 @@ func main() {
 	motors[mbIndex] = motorB
 	///----
 
-	///LCD
-	//TODO: use lcd i2c gobot solution to 16x2 screen
-	lcd, lcdI2cClose, err := lcdD2r2Factory()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer lcdI2cClose()
-
-	err = lcd.BacklightOn()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ip := GetOutboundIP()
-
-	err = lcd.ShowMessage(string(ip), deviceD2r2.SHOW_LINE_1)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = lcd.ShowMessage(VERSION+" Arrow key", deviceD2r2.SHOW_LINE_2)
-	if err != nil {
-		log.Fatal(err)
-	}
-	///----
-
 	///SERVOKIT
 	servoDriver := i2c.NewPCA9685Driver(r,
 		i2c.WithBus(0),
@@ -137,6 +111,32 @@ func main() {
 
 	///ARDUINO SONAR SET
 	arduinoConn, err := r.GetConnection(0x18, 1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	///----
+
+	///LCD
+	//TODO: use lcd i2c gobot solution to 16x2 screen
+	lcd, lcdI2cClose, err := lcdD2r2Factory(0x27, 2)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer lcdI2cClose()
+
+	err = lcd.BacklightOn()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ip := GetOutboundIP()
+
+	err = lcd.ShowMessage(string(ip), deviceD2r2.SHOW_LINE_1)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = lcd.ShowMessage(VERSION+" Arrow key", deviceD2r2.SHOW_LINE_2)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -254,10 +254,10 @@ func main() {
 	robot.Start()
 }
 
-func lcdD2r2Factory() (*deviceD2r2.Lcd, func(), error) {
+func lcdD2r2Factory(addr uint8, bus int) (*deviceD2r2.Lcd, func(), error) {
 	// Create new connection to i2c-bus on 2 line with address 0x27.
 	// Use i2cdetect utility to find device address over the i2c-bus
-	i2c, err := i2cD2r2.NewI2C(0x27, 2)
+	i2c, err := i2cD2r2.NewI2C(addr, bus)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -287,6 +287,7 @@ func GetOutboundIP() string {
 	if err != nil {
 		return "ip offline"
 	}
+
 	defer conn.Close()
 
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
@@ -316,5 +317,4 @@ func getSonarData(sonarConn i2c.Connection) (string, error) {
 		sonarData = string(buf[:])
 	}
 	return sonarData, nil
-
 }
