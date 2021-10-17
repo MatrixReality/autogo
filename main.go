@@ -19,12 +19,12 @@ import (
 
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/gpio"
-	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/keyboard"
 	"gobot.io/x/gobot/platforms/raspi"
 
-	deviceD2r2 "github.com/d2r2/go-hd44780"
-	i2cD2r2 "github.com/d2r2/go-i2c"
+	ArduinoSonarSet "github.com/matrixreality/autogo/peripherals/input"
+	LCD "github.com/matrixreality/autogo/peripherals/output"
+	Servos "github.com/matrixreality/autogo/peripherals/output"
 )
 
 /*
@@ -49,12 +49,15 @@ const (
 
 //TODO env vars on viper
 const (
-	VERSION      = "v0.0.4"
-	LCD_COLLUMNS = 16
-)
-
-const (
-	panTiltFactor = 30
+	VERSION         = "v0.0.4"
+	SERVOKIT_BUS    = 0
+	SERVOKIT_ADDR   = 0x40
+	ARDUINO_BUS     = 1
+	ARDUINO_ADDR    = 0x18
+	LCD_BUS         = 2
+	LCD_ADDR        = 0x27
+	LCD_COLLUMNS    = 16
+	PAN_TILT_FACTOR = 30
 )
 
 const (
@@ -89,40 +92,22 @@ func main() {
 	///----
 
 	///SERVOKIT
-	servoDriver := i2c.NewPCA9685Driver(r,
-		i2c.WithBus(0),
-		i2c.WithAddress(0x40))
-
-	pan := gpio.NewServoDriver(servoDriver, "0")
-	tilt := gpio.NewServoDriver(servoDriver, "1")
-
-	pan.SetName("pan")
-	tilt.SetName("tilt")
-
-	tiltPos := make(map[string]int)
-	tiltPos["top"] = 0
-	tiltPos["horizon"] = 130
-	tiltPos["down"] = 180
-
-	panPos := make(map[string]int)
-	panPos["left"] = 180
-	panPos["right"] = 0
-	///----
+	servoKit := Servos.NewKitDriver(r, SERVOKIT_BUS, SERVOKIT_ADDR)
+	servoPan := Servos.NewServo(servoKit, "0", "pan")
+	servoTilt := Servos.NewServo(servoKit, "1", "tilt")
 
 	///ARDUINO SONAR SET
-	arduinoConn, err := r.GetConnection(0x18, 1)
+	arduinoConn, err := ArduinoSonarSet.GetConnection(r, ARDUINO_BUS, ARDUINO_ADDR)
 	if err != nil {
 		log.Fatal(err)
 	}
-	///----
 
 	///LCD
-	//TODO: use lcd i2c gobot solution to 16x2 screen
-	lcd, lcdI2cClose, err := lcdD2r2Factory(0x27, 2)
+	lcd, lcdClose, err := LCD.NewLcd(LCD_BUS, LCD_ADDR, LCD_COLLUMNS)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer lcdI2cClose()
+	defer lcdClose()
 
 	err = lcd.BacklightOn()
 	if err != nil {
@@ -131,24 +116,23 @@ func main() {
 
 	ip := GetOutboundIP()
 
-	err = lcd.ShowMessage(string(ip), deviceD2r2.SHOW_LINE_1)
+	err = lcd.ShowMessage(string(ip), LCD.LINE_1)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = lcd.ShowMessage(VERSION+" Arrow key", deviceD2r2.SHOW_LINE_2)
+	err = lcd.ShowMessage(VERSION+" Arrow key", LCD.LINE_2)
 	if err != nil {
 		log.Fatal(err)
 	}
-	///----
 
 	firstRun := 1
 	work := func() {
-		servoDriver.SetPWMFreq(60)
+		servoKit.SetPWMFreq(60)
 		if firstRun == 1 {
 			firstRun = 0
-			pan.Center()
-			tilt.Move(uint8(tiltPos["horizon"]))
+			servoPan.Center()
+			servoTilt.Move(uint8(Servos.TiltPos["horizon"]))
 		}
 
 		keys.On(keyboard.Key, func(data interface{}) {
@@ -156,7 +140,7 @@ func main() {
 
 			sonarData := ""
 			if key.Key == keyboard.B {
-				sonarData, err = getSonarData(arduinoConn)
+				sonarData, err = ArduinoSonarSet.GetData(arduinoConn)
 				if err == nil {
 					log.Println("///*********")
 					log.Println("///Print arduino sonar data::")
@@ -166,39 +150,39 @@ func main() {
 
 			}
 
-			panAngle := int(pan.CurrentAngle)
-			tiltAngle := int(tilt.CurrentAngle)
+			panAngle := int(servoPan.CurrentAngle)
+			tiltAngle := int(servoTilt.CurrentAngle)
 			if key.Key == keyboard.W {
-				newTilt := tiltAngle - panTiltFactor
-				if newTilt < tiltPos["top"] {
-					newTilt = tiltPos["top"]
+				newTilt := tiltAngle - PAN_TILT_FACTOR
+				if newTilt < Servos.TiltPos["top"] {
+					newTilt = Servos.TiltPos["top"]
 				}
-				tilt.Move(uint8(newTilt))
+				servoTilt.Move(uint8(newTilt))
 
 			} else if key.Key == keyboard.S {
-				newTilt := tiltAngle + panTiltFactor
-				if newTilt > tiltPos["down"] {
-					newTilt = tiltPos["down"]
+				newTilt := tiltAngle + PAN_TILT_FACTOR
+				if newTilt > Servos.TiltPos["down"] {
+					newTilt = Servos.TiltPos["down"]
 				}
-				tilt.Move(uint8(newTilt))
+				servoTilt.Move(uint8(newTilt))
 
 			} else if key.Key == keyboard.A {
-				newPan := panAngle + panTiltFactor
-				if newPan > panPos["left"] {
-					newPan = panPos["left"]
+				newPan := panAngle + PAN_TILT_FACTOR
+				if newPan > Servos.PanPos["left"] {
+					newPan = Servos.PanPos["left"]
 				}
-				pan.Move(uint8(newPan))
+				servoPan.Move(uint8(newPan))
 
 			} else if key.Key == keyboard.D {
-				newPan := panAngle - panTiltFactor
-				if newPan < panPos["right"] {
-					newPan = panPos["right"]
+				newPan := panAngle - PAN_TILT_FACTOR
+				if newPan < Servos.PanPos["right"] {
+					newPan = Servos.PanPos["right"]
 				}
-				pan.Move(uint8(newPan))
+				servoPan.Move(uint8(newPan))
 
 			} else if key.Key == keyboard.X {
-				pan.Center()
-				tilt.Move(uint8(tiltPos["horizon"]))
+				servoPan.Center()
+				servoTilt.Move(uint8(Servos.TiltPos["horizon"]))
 			}
 
 			if key.Key == keyboard.ArrowUp {
@@ -206,31 +190,31 @@ func main() {
 				motorB.Direction("forward")
 				motorA.Speed(255)
 				motorB.Speed(255)
-				lcd.ShowMessage(rightPad("Front", " ", LCD_COLLUMNS), deviceD2r2.SHOW_LINE_2)
+				lcd.ShowMessage(rightPad("Front", " ", LCD_COLLUMNS), LCD.LINE_2)
 			} else if key.Key == keyboard.ArrowDown {
 				motorA.Direction("backward")
 				motorB.Direction("backward")
 				motorA.Speed(255)
 				motorB.Speed(255)
-				lcd.ShowMessage(rightPad("Back", " ", LCD_COLLUMNS), deviceD2r2.SHOW_LINE_2)
+				lcd.ShowMessage(rightPad("Back", " ", LCD_COLLUMNS), LCD.LINE_2)
 			} else if key.Key == keyboard.ArrowRight {
 				motorA.Direction("forward")
 				motorB.Direction("backward")
 				motorA.Speed(255)
 				motorB.Speed(255)
-				lcd.ShowMessage(rightPad("Left", " ", LCD_COLLUMNS), deviceD2r2.SHOW_LINE_2)
+				lcd.ShowMessage(rightPad("Left", " ", LCD_COLLUMNS), LCD.LINE_2)
 			} else if key.Key == keyboard.ArrowLeft {
 				motorA.Direction("backward")
 				motorB.Direction("forward")
 				motorA.Speed(255)
 				motorB.Speed(255)
-				lcd.ShowMessage(rightPad("Right", " ", LCD_COLLUMNS), deviceD2r2.SHOW_LINE_2)
+				lcd.ShowMessage(rightPad("Right", " ", LCD_COLLUMNS), LCD.LINE_2)
 			} else if key.Key == keyboard.Q {
 				motorA.Speed(0)
 				motorB.Speed(0)
 				motorA.Direction("none")
 				motorB.Direction("none")
-				lcd.ShowMessage(VERSION+" Arrow key", deviceD2r2.SHOW_LINE_2)
+				lcd.ShowMessage(VERSION+" Arrow key", LCD.LINE_2)
 			} else {
 				fmt.Println("keyboard event!", key, key.Char)
 			}
@@ -244,42 +228,14 @@ func main() {
 			motorA,
 			motorB,
 			keys,
-			servoDriver,
-			pan,
-			tilt,
+			servoKit,
+			servoPan,
+			servoTilt,
 		},
 		work,
 	)
 
 	robot.Start()
-}
-
-func lcdD2r2Factory(addr uint8, bus int) (*deviceD2r2.Lcd, func(), error) {
-	// Create new connection to i2c-bus on 2 line with address 0x27.
-	// Use i2cdetect utility to find device address over the i2c-bus
-	i2c, err := i2cD2r2.NewI2C(addr, bus)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Construct lcd-device connected via I2C connection
-	lcd, err := deviceD2r2.NewLcd(i2c, deviceD2r2.LCD_16x2)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Turn on the backlight
-	err = lcd.BacklightOn()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return lcd,
-		func() {
-			// Free I2C connection on exit
-			defer i2c.Close()
-		},
-		nil
 }
 
 func GetOutboundIP() string {
@@ -297,24 +253,4 @@ func GetOutboundIP() string {
 
 func rightPad(s string, padStr string, pLen int) string {
 	return s + strings.Repeat(padStr, (pLen-len(s)))
-}
-
-func getSonarData(sonarConn i2c.Connection) (string, error) {
-	_, err := sonarConn.Write([]byte("A"))
-	if err != nil {
-		return "", err
-	}
-
-	sonarByteLen := 28
-	buf := make([]byte, sonarByteLen)
-	bytesRead, err := sonarConn.Read(buf)
-	if err != nil {
-		return "", err
-	}
-
-	sonarData := ""
-	if bytesRead == sonarByteLen {
-		sonarData = string(buf[:])
-	}
-	return sonarData, nil
 }
