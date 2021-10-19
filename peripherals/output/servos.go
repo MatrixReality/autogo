@@ -42,10 +42,18 @@ func GetByName(kitDriver *i2c.PCA9685Driver, servoName string) *gpio.ServoDriver
 	return Kit[servoName]
 }
 
+func SetAngle(s *gpio.ServoDriver, angle uint8) {
+	s.Move(angle)
+}
+
 func SetCenter(s *gpio.ServoDriver) {
 	s.Center()
 }
 
-func SetAngle(s *gpio.ServoDriver, angle uint8) {
-	s.Move(angle)
+func SetMin(s *gpio.ServoDriver) {
+	s.Min()
+}
+
+func SetMax(s *gpio.ServoDriver) {
+	s.Max()
 }
