@@ -7,6 +7,8 @@ import (
 )
 
 var (
+	Kit = map[string]*gpio.ServoDriver{}
+
 	TiltPos = map[string]int{
 		"top":     0,
 		"horizon": 130,
@@ -19,17 +21,31 @@ var (
 	}
 )
 
-func NewKitDriver(a *raspi.Adaptor, addr int, bus int) *i2c.PCA9685Driver {
-	servoKitDriver := i2c.NewPCA9685Driver(a,
+func NewDriver(a *raspi.Adaptor, bus int, addr int) *i2c.PCA9685Driver {
+	driver := i2c.NewPCA9685Driver(a,
 		i2c.WithBus(bus),
 		i2c.WithAddress(addr))
 
-	return servoKitDriver
+	return driver
 }
 
-func NewServo(kitDriver *i2c.PCA9685Driver, servoId string, servoName string) *gpio.ServoDriver {
+func Add(kitDriver *i2c.PCA9685Driver, servoId string, servoName string) *gpio.ServoDriver {
 	s := gpio.NewServoDriver(kitDriver, servoId)
 	s.SetName(servoName)
 
+	Kit[servoName] = s
+
 	return s
+}
+
+func GetByName(kitDriver *i2c.PCA9685Driver, servoName string) *gpio.ServoDriver {
+	return Kit[servoName]
+}
+
+func SetCenter(s *gpio.ServoDriver) {
+	s.Center()
+}
+
+func SetAngle(s *gpio.ServoDriver, angle uint8) {
+	s.Move(angle)
 }

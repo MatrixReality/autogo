@@ -92,9 +92,9 @@ func main() {
 	///----
 
 	///SERVOKIT
-	servoKit := Servos.NewKitDriver(r, SERVOKIT_BUS, SERVOKIT_ADDR)
-	servoPan := Servos.NewServo(servoKit, "0", "pan")
-	servoTilt := Servos.NewServo(servoKit, "1", "tilt")
+	servoKit := Servos.NewDriver(r, SERVOKIT_BUS, SERVOKIT_ADDR)
+	servoPan := Servos.Add(servoKit, "0", "pan")
+	servoTilt := Servos.Add(servoKit, "1", "tilt")
 
 	///ARDUINO SONAR SET
 	arduinoConn, err := ArduinoSonarSet.GetConnection(r, ARDUINO_BUS, ARDUINO_ADDR)
@@ -108,11 +108,6 @@ func main() {
 		log.Fatal(err)
 	}
 	defer lcdClose()
-
-	err = lcd.BacklightOn()
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	ip := GetOutboundIP()
 
@@ -128,11 +123,10 @@ func main() {
 
 	firstRun := 1
 	work := func() {
-		servoKit.SetPWMFreq(60)
 		if firstRun == 1 {
 			firstRun = 0
-			servoPan.Center()
-			servoTilt.Move(uint8(Servos.TiltPos["horizon"]))
+			Servos.SetCenter(servoPan)
+			Servos.SetAngle(servoTilt, uint8(Servos.TiltPos["horizon"]))
 		}
 
 		keys.On(keyboard.Key, func(data interface{}) {
@@ -157,32 +151,32 @@ func main() {
 				if newTilt < Servos.TiltPos["top"] {
 					newTilt = Servos.TiltPos["top"]
 				}
-				servoTilt.Move(uint8(newTilt))
+				Servos.SetAngle(servoTilt, uint8(newTilt))
 
 			} else if key.Key == keyboard.S {
 				newTilt := tiltAngle + PAN_TILT_FACTOR
 				if newTilt > Servos.TiltPos["down"] {
 					newTilt = Servos.TiltPos["down"]
 				}
-				servoTilt.Move(uint8(newTilt))
+				Servos.SetAngle(servoTilt, uint8(newTilt))
 
 			} else if key.Key == keyboard.A {
 				newPan := panAngle + PAN_TILT_FACTOR
 				if newPan > Servos.PanPos["left"] {
 					newPan = Servos.PanPos["left"]
 				}
-				servoPan.Move(uint8(newPan))
+				Servos.SetAngle(servoPan, uint8(newPan))
 
 			} else if key.Key == keyboard.D {
 				newPan := panAngle - PAN_TILT_FACTOR
 				if newPan < Servos.PanPos["right"] {
 					newPan = Servos.PanPos["right"]
 				}
-				servoPan.Move(uint8(newPan))
+				Servos.SetAngle(servoPan, uint8(newPan))
 
 			} else if key.Key == keyboard.X {
-				servoPan.Center()
-				servoTilt.Move(uint8(Servos.TiltPos["horizon"]))
+				Servos.SetCenter(servoPan)
+				Servos.SetAngle(servoTilt, uint8(Servos.TiltPos["horizon"]))
 			}
 
 			if key.Key == keyboard.ArrowUp {
