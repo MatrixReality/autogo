@@ -48,57 +48,61 @@ const (
 	mbIndex
 )
 
-var motorA *gpio.MotorDriver
-var motorB *gpio.MotorDriver
-
-func NewMotors(a *raspi.Adaptor) (*gpio.MotorDriver, *gpio.MotorDriver) {
-	motorA = gpio.NewMotorDriver(a, maPWMPin)
-	motorA.ForwardPin = maDir1Pin
-	motorA.BackwardPin = maDir2Pin
-	motorA.SetName("Motor-A")
-
-	motorB = gpio.NewMotorDriver(a, mbPWMPin)
-	motorB.ForwardPin = mbDir1Pin
-	motorB.BackwardPin = mbDir2Pin
-	motorB.SetName("Motor-B")
-
-	motors[maIndex] = motorA
-	motors[mbIndex] = motorB
-
-	return motorA, motorB
+type Motors struct {
+	MotorA *gpio.MotorDriver
+	MotorB *gpio.MotorDriver
 }
 
-func Forward(speed byte) {
-	motorA.Direction("forward")
-	motorB.Direction("forward")
-	motorA.Speed(speed)
-	motorB.Speed(speed)
+func NewMotors(a *raspi.Adaptor) *Motors {
+	MotorA := gpio.NewMotorDriver(a, maPWMPin)
+	MotorA.ForwardPin = maDir1Pin
+	MotorA.BackwardPin = maDir2Pin
+	MotorA.SetName("Motor-A")
+
+	MotorB := gpio.NewMotorDriver(a, mbPWMPin)
+	MotorB.ForwardPin = mbDir1Pin
+	MotorB.BackwardPin = mbDir2Pin
+	MotorB.SetName("Motor-B")
+
+	this := &Motors{MotorA: MotorA, MotorB: MotorB}
+
+	motors[maIndex] = MotorA
+	motors[mbIndex] = MotorB
+
+	return this
 }
 
-func Backward(speed byte) {
-	motorA.Direction("backward")
-	motorB.Direction("backward")
-	motorA.Speed(speed)
-	motorB.Speed(speed)
+func (this *Motors) Forward(speed byte) {
+	this.MotorA.Direction("forward")
+	this.MotorB.Direction("forward")
+	this.MotorA.Speed(speed)
+	this.MotorB.Speed(speed)
 }
 
-func Right(speed byte) {
-	motorA.Direction("forward")
-	motorB.Direction("backward")
-	motorA.Speed(speed)
-	motorB.Speed(speed)
+func (this *Motors) Backward(speed byte) {
+	this.MotorA.Direction("backward")
+	this.MotorB.Direction("backward")
+	this.MotorA.Speed(speed)
+	this.MotorB.Speed(speed)
 }
 
-func Left(speed byte) {
-	motorA.Direction("backward")
-	motorB.Direction("forward")
-	motorA.Speed(speed)
-	motorB.Speed(speed)
+func (this *Motors) Right(speed byte) {
+	this.MotorA.Direction("forward")
+	this.MotorB.Direction("backward")
+	this.MotorA.Speed(speed)
+	this.MotorB.Speed(speed)
 }
 
-func Stop() {
-	motorA.Speed(0)
-	motorB.Speed(0)
-	motorA.Direction("none")
-	motorB.Direction("none")
+func (this *Motors) Left(speed byte) {
+	this.MotorA.Direction("backward")
+	this.MotorB.Direction("forward")
+	this.MotorA.Speed(speed)
+	this.MotorB.Speed(speed)
+}
+
+func (this *Motors) Stop() {
+	this.MotorA.Speed(0)
+	this.MotorB.Speed(0)
+	this.MotorA.Direction("none")
+	this.MotorB.Direction("none")
 }
