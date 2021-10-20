@@ -2,6 +2,7 @@ package peripherals
 
 import (
 	"log"
+	"strings"
 
 	deviceD2r2 "github.com/d2r2/go-hd44780"
 	i2cD2r2 "github.com/d2r2/go-i2c"
@@ -16,7 +17,14 @@ const (
 	LINE_4 = deviceD2r2.SHOW_LINE_4
 )
 
-func NewLcd(bus int, addr uint8, collumns int) (*deviceD2r2.Lcd, func(), error) {
+type Display struct {
+	i2c      *i2cD2r2.I2C
+	lcd      *deviceD2r2.Lcd
+	collumns int
+}
+
+//func NewLcd(bus int, addr uint8, collumns int) (*deviceD2r2.Lcd, func(), error) {
+func NewLcd(bus int, addr uint8, collumns int) (*Display, error) {
 	//TODO: use lcd i2c gobot solution to 16x2 screen
 
 	// Create new connection to i2c-bus on 2 line with address 0x27.
@@ -42,10 +50,23 @@ func NewLcd(bus int, addr uint8, collumns int) (*deviceD2r2.Lcd, func(), error) 
 		log.Fatal(err)
 	}
 
-	return lcd,
-		func() {
-			// Free I2C connection on exit
-			defer i2c.Close()
-		},
-		nil
+	this := &Display{i2c: i2c, lcd: lcd, collumns: collumns}
+	return this, nil
+}
+
+func (this *Display) DeferAction() {
+	defer this.i2c.Close()
+}
+
+func (this *Display) ShowMessage(message string, line deviceD2r2.ShowOptions) error {
+	err := this.lcd.ShowMessage(rightPad(message, " ", this.collumns), line)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func rightPad(s string, padStr string, pLen int) string {
+	return s + strings.Repeat(padStr, (pLen-len(s)))
 }

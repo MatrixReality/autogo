@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"strings"
 
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/platforms/keyboard"
@@ -18,7 +17,7 @@ import (
 
 //TODO env vars on viper
 const (
-	VERSION         = "v0.0.4"
+	VERSION         = "v0.0.5"
 	SERVOKIT_BUS    = 0
 	SERVOKIT_ADDR   = 0x40
 	ARDUINO_BUS     = 1
@@ -38,8 +37,8 @@ func main() {
 
 	///SERVOKIT
 	servoKit := Servos.NewDriver(r, SERVOKIT_BUS, SERVOKIT_ADDR)
-	servoPan := Servos.Add(servoKit, "0", "pan")
-	servoTilt := Servos.Add(servoKit, "1", "tilt")
+	servoPan := servoKit.Add("0", "pan")
+	servoTilt := servoKit.Add("1", "tilt")
 
 	///ARDUINO SONAR SET
 	arduinoConn, err := ArduinoSonarSet.GetConnection(r, ARDUINO_BUS, ARDUINO_ADDR)
@@ -48,11 +47,11 @@ func main() {
 	}
 
 	///LCD
-	lcd, lcdClose, err := LCD.NewLcd(LCD_BUS, LCD_ADDR, LCD_COLLUMNS)
+	lcd, err := LCD.NewLcd(LCD_BUS, LCD_ADDR, LCD_COLLUMNS)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer lcdClose()
+	defer lcd.DeferAction()
 
 	ip := GetOutboundIP()
 
@@ -66,10 +65,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	//Servos func, ArduinoSonarSet func, keys *Driver,
 	firstRun := 1
 	work := func() {
 		if firstRun == 1 {
 			firstRun = 0
+			servoKit.Init()
 			Servos.SetCenter(servoPan)
 			Servos.SetAngle(servoTilt, uint8(Servos.TiltPos["horizon"]))
 		}
@@ -126,16 +127,16 @@ func main() {
 
 			if key.Key == keyboard.ArrowUp {
 				Motors.Forward(255)
-				lcd.ShowMessage(rightPad("Front", " ", LCD_COLLUMNS), LCD.LINE_2)
+				lcd.ShowMessage("Front", LCD.LINE_2)
 			} else if key.Key == keyboard.ArrowDown {
 				Motors.Backward(255)
-				lcd.ShowMessage(rightPad("Back", " ", LCD_COLLUMNS), LCD.LINE_2)
+				lcd.ShowMessage("Back", LCD.LINE_2)
 			} else if key.Key == keyboard.ArrowRight {
 				Motors.Left(255)
-				lcd.ShowMessage(rightPad("Left", " ", LCD_COLLUMNS), LCD.LINE_2)
+				lcd.ShowMessage("Left", LCD.LINE_2)
 			} else if key.Key == keyboard.ArrowLeft {
 				Motors.Right(255)
-				lcd.ShowMessage(rightPad("Right", " ", LCD_COLLUMNS), LCD.LINE_2)
+				lcd.ShowMessage("Right", LCD.LINE_2)
 			} else if key.Key == keyboard.Q {
 				Motors.Stop()
 				lcd.ShowMessage(VERSION+" Arrow key", LCD.LINE_2)
@@ -152,7 +153,7 @@ func main() {
 			motorA,
 			motorB,
 			keys,
-			servoKit,
+			servoKit.Driver,
 			servoPan,
 			servoTilt,
 		},
@@ -173,8 +174,4 @@ func GetOutboundIP() string {
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 
 	return localAddr.IP.String()
-}
-
-func rightPad(s string, padStr string, pLen int) string {
-	return s + strings.Repeat(padStr, (pLen-len(s)))
 }
