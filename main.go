@@ -8,11 +8,9 @@ import (
 	"gobot.io/x/gobot/platforms/keyboard"
 	"gobot.io/x/gobot/platforms/raspi"
 
-	handlers "github.com/matrixreality/autogo/handlers"
-	ArduinoSonarSet "github.com/matrixreality/autogo/peripherals/input"
-	LCD "github.com/matrixreality/autogo/peripherals/output"
-	Motors "github.com/matrixreality/autogo/peripherals/output"
-	Servos "github.com/matrixreality/autogo/peripherals/output"
+	"github.com/matrixreality/autogo/handlers"
+	input "github.com/matrixreality/autogo/peripherals/input"
+	output "github.com/matrixreality/autogo/peripherals/output"
 )
 
 //TODO env vars on viper
@@ -33,41 +31,39 @@ func main() {
 	keys := keyboard.NewDriver()
 
 	///MOTORS
-	motors := Motors.NewMotors(r)
+	motors := output.NewMotors(r)
 
 	///SERVOKIT
-	servoKit := Servos.NewDriver(r, SERVOKIT_BUS, SERVOKIT_ADDR)
+	servoKit := output.NewServos(r, SERVOKIT_BUS, SERVOKIT_ADDR)
 	servoPan := servoKit.Add("0", "pan")
 	servoTilt := servoKit.Add("1", "tilt")
 
 	///ARDUINO SONAR SET
-	arduinoConn, err := ArduinoSonarSet.GetConnection(r, ARDUINO_BUS, ARDUINO_ADDR)
+	sonarSet, err := input.NewSonarSet(r, ARDUINO_BUS, ARDUINO_ADDR)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	///LCD
-	lcd, err := LCD.NewLcd(LCD_BUS, LCD_ADDR, LCD_COLLUMNS)
+	lcd, err := output.NewLcd(LCD_BUS, LCD_ADDR, LCD_COLLUMNS)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer lcd.DeferAction()
 
 	ip := GetOutboundIP()
-
-	err = lcd.ShowMessage(string(ip), LCD.LINE_1)
+	err = lcd.ShowMessage(string(ip), output.LINE_1)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = lcd.ShowMessage(VERSION+" Arrow key", LCD.LINE_2)
+	err = lcd.ShowMessage(VERSION+" Arrow key", output.LINE_2)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//Servos func, ArduinoSonarSet func, keys *Driver,
 	work := func() {
-		handlers.InitKeyboard(servoKit, arduinoConn, lcd, motors, keys)
+		handlers.InitKeyboard(keys, motors, servoKit, sonarSet, lcd)
 	}
 
 	robot := gobot.NewRobot(

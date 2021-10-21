@@ -5,24 +5,29 @@ import (
 	"gobot.io/x/gobot/platforms/raspi"
 )
 
-func GetConnection(a *raspi.Adaptor, bus int, addr uint8) (connection i2c.Connection, err error) {
-	arduinoConn, err := a.GetConnection(0x18, 1)
+type SonarSet struct {
+	conn i2c.Connection
+}
+
+func NewSonarSet(a *raspi.Adaptor, bus int, addr uint8) (sonarSet *SonarSet, err error) {
+	conn, err := a.GetConnection(0x18, 1)
 	if err != nil {
 		return nil, err
 	}
 
-	return arduinoConn, nil
+	this := &SonarSet{conn: conn}
+	return this, nil
 }
 
-func GetData(conn i2c.Connection) (string, error) {
-	_, err := conn.Write([]byte("A"))
+func (this *SonarSet) GetData() (string, error) {
+	_, err := this.conn.Write([]byte("A"))
 	if err != nil {
 		return "", err
 	}
 
 	sonarByteLen := 28
 	buf := make([]byte, sonarByteLen)
-	bytesRead, err := conn.Read(buf)
+	bytesRead, err := this.conn.Read(buf)
 	if err != nil {
 		return "", err
 	}

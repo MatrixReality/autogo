@@ -4,22 +4,21 @@ import (
 	"fmt"
 	"log"
 
-	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/keyboard"
 
-	ArduinoSonarSet "github.com/matrixreality/autogo/peripherals/input"
-	LCD "github.com/matrixreality/autogo/peripherals/output"
-	Motors "github.com/matrixreality/autogo/peripherals/output"
-	Servos "github.com/matrixreality/autogo/peripherals/output"
+	input "github.com/matrixreality/autogo/peripherals/input"
+	output "github.com/matrixreality/autogo/peripherals/output"
 )
 
 //TODO env vars on viper
 const (
-	VERSION         = "v0.0.5"
-	PAN_TILT_FACTOR = 30
+	VERSION              = "v0.0.5"
+	PAN_TILT_FACTOR      = 30
+	MAX_SPEED            = 255
+	MIN_STOP_SONAR_VALUE = 15
 )
 
-func InitKeyboard(servoKit *Servos.Servos, arduinoConn i2c.Connection, lcd *LCD.Display, motors *Motors.Motors, keys *keyboard.Driver) {
+func InitKeyboard(keys *keyboard.Driver, motors *output.Motors, servoKit *output.Servos, SonarSet *input.SonarSet, lcd *output.Display) {
 	firstRun := 1
 	servoPan := servoKit.GetByName("pan")
 	servoTilt := servoKit.GetByName("tilt")
@@ -27,15 +26,15 @@ func InitKeyboard(servoKit *Servos.Servos, arduinoConn i2c.Connection, lcd *LCD.
 	if firstRun == 1 {
 		firstRun = 0
 		servoKit.Init()
-		Servos.SetCenter(servoPan)
-		Servos.SetAngle(servoTilt, uint8(Servos.TiltPos["horizon"]))
+		servoKit.SetCenter(servoPan)
+		servoKit.SetAngle(servoTilt, uint8(servoKit.TiltPos["horizon"]))
 	}
 
 	keys.On(keyboard.Key, func(data interface{}) {
 		key := data.(keyboard.KeyEvent)
 
 		if key.Key == keyboard.B {
-			sonarData, err := ArduinoSonarSet.GetData(arduinoConn)
+			sonarData, err := SonarSet.GetData()
 			if err == nil {
 				log.Println("///*********")
 				log.Println("///Print arduino sonar data::")
@@ -49,52 +48,52 @@ func InitKeyboard(servoKit *Servos.Servos, arduinoConn i2c.Connection, lcd *LCD.
 		tiltAngle := int(servoTilt.CurrentAngle)
 		if key.Key == keyboard.W {
 			newTilt := tiltAngle - PAN_TILT_FACTOR
-			if newTilt < Servos.TiltPos["top"] {
-				newTilt = Servos.TiltPos["top"]
+			if newTilt < servoKit.TiltPos["top"] {
+				newTilt = servoKit.TiltPos["top"]
 			}
-			Servos.SetAngle(servoTilt, uint8(newTilt))
+			servoKit.SetAngle(servoTilt, uint8(newTilt))
 
 		} else if key.Key == keyboard.S {
 			newTilt := tiltAngle + PAN_TILT_FACTOR
-			if newTilt > Servos.TiltPos["down"] {
-				newTilt = Servos.TiltPos["down"]
+			if newTilt > servoKit.TiltPos["down"] {
+				newTilt = servoKit.TiltPos["down"]
 			}
-			Servos.SetAngle(servoTilt, uint8(newTilt))
+			servoKit.SetAngle(servoTilt, uint8(newTilt))
 
 		} else if key.Key == keyboard.A {
 			newPan := panAngle + PAN_TILT_FACTOR
-			if newPan > Servos.PanPos["left"] {
-				newPan = Servos.PanPos["left"]
+			if newPan > servoKit.PanPos["left"] {
+				newPan = servoKit.PanPos["left"]
 			}
-			Servos.SetAngle(servoPan, uint8(newPan))
+			servoKit.SetAngle(servoPan, uint8(newPan))
 
 		} else if key.Key == keyboard.D {
 			newPan := panAngle - PAN_TILT_FACTOR
-			if newPan < Servos.PanPos["right"] {
-				newPan = Servos.PanPos["right"]
+			if newPan < servoKit.PanPos["right"] {
+				newPan = servoKit.PanPos["right"]
 			}
-			Servos.SetAngle(servoPan, uint8(newPan))
+			servoKit.SetAngle(servoPan, uint8(newPan))
 
 		} else if key.Key == keyboard.X {
-			Servos.SetCenter(servoPan)
-			Servos.SetAngle(servoTilt, uint8(Servos.TiltPos["horizon"]))
+			servoKit.SetCenter(servoPan)
+			servoKit.SetAngle(servoTilt, uint8(servoKit.TiltPos["horizon"]))
 		}
 
 		if key.Key == keyboard.ArrowUp {
-			motors.Forward(255)
-			lcd.ShowMessage("Front", LCD.LINE_2)
+			motors.Forward(MAX_SPEED)
+			lcd.ShowMessage("Front", output.LINE_2)
 		} else if key.Key == keyboard.ArrowDown {
-			motors.Backward(255)
-			lcd.ShowMessage("Back", LCD.LINE_2)
+			motors.Backward(MAX_SPEED)
+			lcd.ShowMessage("Back", output.LINE_2)
 		} else if key.Key == keyboard.ArrowRight {
-			motors.Left(255)
-			lcd.ShowMessage("Left", LCD.LINE_2)
+			motors.Left(MAX_SPEED)
+			lcd.ShowMessage("Left", output.LINE_2)
 		} else if key.Key == keyboard.ArrowLeft {
-			motors.Right(255)
-			lcd.ShowMessage("Right", LCD.LINE_2)
+			motors.Right(MAX_SPEED)
+			lcd.ShowMessage("Right", output.LINE_2)
 		} else if key.Key == keyboard.Q {
 			motors.Stop()
-			lcd.ShowMessage(VERSION+" Arrow key", LCD.LINE_2)
+			lcd.ShowMessage(VERSION+" Arrow key", output.LINE_2)
 		} else {
 			fmt.Println("keyboard event!", key, key.Char)
 		}
