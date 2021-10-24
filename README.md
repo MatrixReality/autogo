@@ -65,9 +65,9 @@ Componentes:
   - [Conector p4 2.1 mm](https://lista.mercadolivre.com.br/conector-p4-2.1-mm#D[A:conector%20p4%202.1%20mm])
   - MiniProtoboard OU Tubos termo retrateis, Cabos, fita isolante, curiosidade vontade e disposição para nao se frustrar muito no processo (o que não raro, vai acontecer)
 
-Criando novas Issues. A ideia é manter atualizado enquanto avanço em Golang e outros tópicos vinculados interessantes (Robótica Básica, Introdução Visão Computacional, Introdução a IA e ML).
+Criando novas Issues. A ideia é manter atualizado enquanto avanço em Golang e outros tópicos vinculados interessantes (Robótica Básica, Introdução a Visão Computacional, Introdução a IA e ML).
 
-Existe uma versão do projeto em Python (Autobot), pretendo andar com ela em paralelo pois Python ja possui soluções serão portadas para o AutoGo.
+Existe uma versão do projeto em Python (Autobot), pretendo andar com ela em paralelo pois Python já possui soluções que serão portadas para o AutoGo.
 
 Um estudo divertido.
 Todos estamos tentando melhorar. ;)
