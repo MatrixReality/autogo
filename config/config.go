@@ -44,9 +44,9 @@ type Camera struct {
 
 type MQTT struct {
 	Enabled  bool   `mapstructure:"MQTT_ENABLED"`
-	Host     string `mapstructure:"MQTT_HOST "`
-	Port     string `mapstructure:"MQTT_PORT "`
-	User     string `mapstructure:"MQTT_USER "`
+	Host     string `mapstructure:"MQTT_HOST"`
+	Port     string `mapstructure:"MQTT_PORT"`
+	User     string `mapstructure:"MQTT_USER"`
 	Password string `mapstructure:"MQTT_PASSWORD"`
 }
 
