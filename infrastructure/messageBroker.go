@@ -1,8 +1,3 @@
-/*
-//TODO: Remove. For local test porpouses
-package main
-*/
-
 package infrastructure
 
 import (
@@ -14,7 +9,9 @@ import (
 )
 
 var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
+	//if msg.Topic() == "autogo/tank-01/lcd" {
 	fmt.Printf("Received message: %s from topic %s\n", msg.Payload(), msg.Topic())
+	//}
 }
 
 var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
@@ -25,17 +22,20 @@ var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err
 	fmt.Printf("Connect lost %v", err)
 }
 
-type MQTT struct {
+type MessageBroker struct {
 	Client mqtt.Client
+	Cfg    config.MessageBroker
 }
 
-func NewMQTTClient(cfg config.MQTT) *MQTT {
+func NewMessageBroker(cfg config.MessageBroker) *MessageBroker {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%s", cfg.Host, cfg.Port))
 	opts.SetClientID("go_mqtt_client")
 
-	//opts.SetUserName("autoGo")
-	//opts.SetPassword("******")
+	if len(cfg.User) > 3 && len(cfg.Password) > 3 {
+		opts.SetUsername(cfg.User)
+		opts.SetPassword(cfg.Password)
+	}
 
 	opts.SetDefaultPublishHandler(messagePubHandler)
 	opts.OnConnect = connectHandler
@@ -46,44 +46,31 @@ func NewMQTTClient(cfg config.MQTT) *MQTT {
 		panic(token.Error())
 	}
 
-	this := &MQTT{Client: client}
+	this := &MessageBroker{Client: client, Cfg: cfg}
 	return this
 }
 
-func (this *MQTT) Disconnect(ttl uint) {
-	this.Client.Disconnect(ttl)
+func (this *MessageBroker) Disconnect() {
+	this.Client.Disconnect(this.Cfg.WaitTTLDisconnect)
 }
 
-func (this *MQTT) Pub(topic string) {
+func (this *MessageBroker) PubT(topic string) {
 	num := 10
 	for i := 0; i < num; i++ {
-		text := fmt.Sprintf("Show msg %d", i)
+		text := fmt.Sprintf("msg: sonar center %d", i)
 		token := this.Client.Publish(topic, 0, false, text)
 		token.Wait()
 		time.Sleep(time.Second)
 	}
 }
 
-func (this *MQTT) Sub(topic string) {
+func (this *MessageBroker) Pub(topic string, message string) {
+	token := this.Client.Publish(topic, 0, false, message)
+	token.Wait()
+}
+
+func (this *MessageBroker) Sub(topic string) {
 	token := this.Client.Subscribe(topic, 1, nil)
 	token.Wait()
-	fmt.Printf("Subscribed to topic: %s", topic)
+	//fmt.Printf("Subscribed to topic: %s", topic)
 }
-
-/*
-//TODO: Remove. For local test porpouses
-func main() {
-	cfg, err := config.LoadConfig("../.")
-	if err != nil {
-		log.Fatal("cannot load config: ", err)
-	}
-
-	MessageBroker := NewMQTTClient(cfg.MQTT)
-
-	topic := "topic/test"
-	MessageBroker.Sub(topic)
-	MessageBroker.Pub(topic)
-
-	MessageBroker.Disconnect(250)
-}
-*/

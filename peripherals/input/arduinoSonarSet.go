@@ -13,7 +13,8 @@ import (
 var datakeys = []string{"center", "centerRight", "back", "centerLeft"}
 
 type SonarSet struct {
-	conn i2c.Connection
+	conn  i2c.Connection
+	Topic string
 }
 
 func NewSonarSet(a *raspi.Adaptor, cfg config.ArduinoSonar) (sonarSet *SonarSet, err error) {

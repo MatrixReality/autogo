@@ -7,17 +7,10 @@ import (
 
 	deviceD2r2 "github.com/d2r2/go-hd44780"
 	i2cD2r2 "github.com/d2r2/go-i2c"
-	"github.com/jtonynet/autogo/config"
+	config "github.com/jtonynet/autogo/config"
 )
 
-const (
-	DEFAULT_COLLUMNS = 16
-
-	LINE_1 = deviceD2r2.SHOW_LINE_1
-	LINE_2 = deviceD2r2.SHOW_LINE_2
-	LINE_3 = deviceD2r2.SHOW_LINE_3
-	LINE_4 = deviceD2r2.SHOW_LINE_4
-)
+const DEFAULT_COLLUMNS = 16
 
 type Display struct {
 	i2c      *i2cD2r2.I2C
@@ -65,15 +58,31 @@ func (this *Display) DeferAction() {
 	defer this.i2c.Close()
 }
 
-func (this *Display) ShowMessage(message string, line deviceD2r2.ShowOptions) error {
+func (this *Display) ShowMessage(message string, line int) error {
 	time.Sleep(5 * time.Millisecond)
+
+	var l deviceD2r2.ShowOptions
+	switch line {
+	case 1:
+		l = deviceD2r2.SHOW_LINE_1
+	case 2:
+		l = deviceD2r2.SHOW_LINE_2
+	case 3:
+		l = deviceD2r2.SHOW_LINE_3
+	case 4:
+		l = deviceD2r2.SHOW_LINE_4
+	default:
+		l = deviceD2r2.SHOW_LINE_1
+	}
+
 	if this.InUse == false {
 		this.InUse = true
-		err := this.lcd.ShowMessage(rightPad(message, " ", this.collumns), line)
+		err := this.lcd.ShowMessage(rightPad(message, " ", this.collumns), l)
 		if err != nil {
 			this.InUse = false
 			return err
 		}
+
 		this.InUse = false
 		return nil
 	}
