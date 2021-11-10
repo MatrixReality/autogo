@@ -9,9 +9,7 @@ import (
 )
 
 var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-	//if msg.Topic() == "autogo/tank-01/lcd" {
-	fmt.Printf("Received message: %s from topic %s\n", msg.Payload(), msg.Topic())
-	//}
+	//	fmt.Printf("Received message: %s from topic %s\n", msg.Payload(), msg.Topic())
 }
 
 var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
@@ -57,7 +55,7 @@ func (this *MessageBroker) Disconnect() {
 func (this *MessageBroker) PubT(topic string) {
 	num := 10
 	for i := 0; i < num; i++ {
-		text := fmt.Sprintf("msg: sonar center %d", i)
+		text := fmt.Sprintf("msg: sonar center %d ", i)
 		token := this.Client.Publish(topic, 0, false, text)
 		token.Wait()
 		time.Sleep(time.Second)
@@ -72,5 +70,5 @@ func (this *MessageBroker) Pub(topic string, message string) {
 func (this *MessageBroker) Sub(topic string) {
 	token := this.Client.Subscribe(topic, 1, nil)
 	token.Wait()
-	//fmt.Printf("Subscribed to topic: %s", topic)
+	//fmt.Printf("Subscribed to topic: %s ", topic)
 }

@@ -29,48 +29,50 @@ type Robot struct {
 	Status   *StatusDomain.Status
 }
 
-func NewRobot(MessageBroker *infrastructure.MessageBroker, Motors *output.Motors, ServoKit *output.Servos, display *output.Display, SonarSet *input.SonarSet, Cfg *config.Config) *Robot {
-	Status := &StatusDomain.Status{ColissionDetected: false, Direction: "", MinStopValue: Cfg.ArduinoSonar.MinStopValue}
-	this := &Robot{MessageBroker: MessageBroker, Motors: Motors, ServoKit: ServoKit, Status: Status, Cfg: Cfg}
+func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors, servoKit *output.Servos, display *output.Display, sonarSet *input.SonarSet, cfg *config.Config) *Robot {
+	Status := &StatusDomain.Status{ColissionDetected: false, Direction: "", MinStopValue: cfg.ArduinoSonar.MinStopValue}
+	this := &Robot{MessageBroker: messageBroker, Motors: motors, ServoKit: servoKit, Status: Status, Cfg: cfg}
 
-	if Cfg.ServoKit.Enabled {
-		servoPan := ServoKit.GetByName("pan")
-		servoTilt := ServoKit.GetByName("tilt")
+	if servoKit != nil {
+		servoPan := servoKit.GetByName("pan")
+		servoTilt := servoKit.GetByName("tilt")
 
-		ServoKit.Init()
-		ServoKit.SetCenter(servoPan)
-		ServoKit.SetAngle(servoTilt, uint8(ServoKit.TiltPos["horizon"]))
+		servoKit.Init()
+		servoKit.SetCenter(servoPan)
+		servoKit.SetAngle(servoTilt, uint8(servoKit.TiltPos["horizon"]))
 	}
 
-	var LCDDomain *LcdDomain.LCD
-	if Cfg.LCD.Enabled {
+	if display != nil {
 		msgLine1 := getOutboundIP()
-		if Cfg.Camera.Enabled {
-			s := []string{msgLine1, Cfg.Camera.Port}
+		if cfg.Camera.Enabled {
+			s := []string{msgLine1, cfg.Camera.Port}
 			msgLine1 = strings.Join(s, ":")
 		}
 
-		LCDTopic := fmt.Sprintf("autogo/%s/lcd", Cfg.RobotName)
-		LCDDomain := LcdDomain.NewLCD(display, MessageBroker, LCDTopic)
-		this.LCD = LCDDomain
+		LCDTopic := fmt.Sprintf("autogo/%s/lcd", cfg.RobotName)
+		this.LCD = LcdDomain.NewLCD(display, messageBroker, LCDTopic)
 
 		//TODO test only, remove
-		if MessageBroker != nil {
-			MessageBroker.Sub(LCDTopic)
+		if messageBroker != nil {
+			messageBroker.Sub(LCDTopic)
 		}
 
-		LCDDomain.ShowMessage(msgLine1, 1)
-		LCDDomain.ShowMessage(Cfg.Version+" Arrow key", 2)
+		this.LCD.ShowMessage(msgLine1, 1)
+		this.LCD.ShowMessage(cfg.Version+" Arrow key", 2)
 	}
 
-	if Cfg.ArduinoSonar.Enabled && Cfg.Motors.Enabled {
-		sonarTopic := fmt.Sprintf("autogo/%s/sonar", Cfg.RobotName)
-		sonarDomain := SonarDomain.NewSonarSet(SonarSet, LCDDomain, Motors, MessageBroker, Status, sonarTopic)
+	if sonarSet != nil && motors != nil {
+		//fmt.Print("cfg.ArduinoSonar.DelayInMS: ")
+		//fmt.Print(cfg.ArduinoSonar.DelayInMS)
+		//fmt.Print("------------------\n\n")
+
+		sonarTopic := fmt.Sprintf("autogo/%s/sonar", cfg.RobotName)
+		sonarDomain := SonarDomain.NewSonarSet(sonarSet, this.LCD, motors, messageBroker, Status, sonarTopic, cfg.ArduinoSonar.DelayInMS)
 		this.SonarSet = sonarDomain
 
 		//TODO test only, remove
-		if MessageBroker != nil {
-			MessageBroker.Sub(this.SonarSet.Topic)
+		if messageBroker != nil {
+			messageBroker.Sub(sonarTopic)
 		}
 
 		go sonarDomain.SonarWorker()
@@ -82,8 +84,9 @@ func NewRobot(MessageBroker *infrastructure.MessageBroker, Motors *output.Motors
 func (this *Robot) ControllByKeyboard(data interface{}) {
 	oldDirection := this.Status.Direction
 	key := input.GetKeyEvent(data)
+	cfg := this.Cfg
 
-	if this.Cfg.ServoKit.Enabled {
+	if this.ServoKit != nil {
 		servoPan := this.ServoKit.GetByName("pan")
 		servoTilt := this.ServoKit.GetByName("tilt")
 
@@ -91,28 +94,28 @@ func (this *Robot) ControllByKeyboard(data interface{}) {
 		tiltAngle := int(servoTilt.CurrentAngle)
 
 		if key.Key == keyboard.W {
-			newTilt := tiltAngle - this.Cfg.ServoKit.PanTiltFactor
+			newTilt := tiltAngle - cfg.ServoKit.PanTiltFactor
 			if newTilt < this.ServoKit.TiltPos["top"] {
 				newTilt = this.ServoKit.TiltPos["top"]
 			}
 			this.ServoKit.SetAngle(servoTilt, uint8(newTilt))
 
 		} else if key.Key == keyboard.S {
-			newTilt := tiltAngle + this.Cfg.ServoKit.PanTiltFactor
+			newTilt := tiltAngle + cfg.ServoKit.PanTiltFactor
 			if newTilt > this.ServoKit.TiltPos["down"] {
 				newTilt = this.ServoKit.TiltPos["down"]
 			}
 			this.ServoKit.SetAngle(servoTilt, uint8(newTilt))
 
 		} else if key.Key == keyboard.A {
-			newPan := panAngle + this.Cfg.ServoKit.PanTiltFactor
+			newPan := panAngle + cfg.ServoKit.PanTiltFactor
 			if newPan > this.ServoKit.PanPos["left"] {
 				newPan = this.ServoKit.PanPos["left"]
 			}
 			this.ServoKit.SetAngle(servoPan, uint8(newPan))
 
 		} else if key.Key == keyboard.D {
-			newPan := panAngle - this.Cfg.ServoKit.PanTiltFactor
+			newPan := panAngle - cfg.ServoKit.PanTiltFactor
 			if newPan < this.ServoKit.PanPos["right"] {
 				newPan = this.ServoKit.PanPos["right"]
 			}
@@ -123,33 +126,33 @@ func (this *Robot) ControllByKeyboard(data interface{}) {
 		}
 	}
 
-	if this.Cfg.Motors.Enabled {
+	if this.Motors != nil {
 		if key.Key == keyboard.ArrowUp && this.Status.ColissionDetected == false {
-			this.Motors.Forward(this.Cfg.Motors.MaxSpeed)
+			this.Motors.Forward(cfg.Motors.MaxSpeed)
 			this.Status.Direction = "Front"
 			this.Status.LCDMsg = this.Status.Direction
 		} else if key.Key == keyboard.ArrowDown {
-			this.Motors.Backward(this.Cfg.Motors.MaxSpeed)
+			this.Motors.Backward(cfg.Motors.MaxSpeed)
 			this.Status.Direction = "Back"
 			this.Status.LCDMsg = this.Status.Direction
 		} else if key.Key == keyboard.ArrowRight {
-			this.Motors.Left(this.Cfg.Motors.MaxSpeed)
+			this.Motors.Left(cfg.Motors.MaxSpeed)
 			this.Status.Direction = "Right"
 			this.Status.LCDMsg = this.Status.Direction
 		} else if key.Key == keyboard.ArrowLeft {
-			this.Motors.Right(this.Cfg.Motors.MaxSpeed)
+			this.Motors.Right(cfg.Motors.MaxSpeed)
 			this.Status.Direction = "Left"
 			this.Status.LCDMsg = this.Status.Direction
 		} else if key.Key == keyboard.Q {
 			this.Motors.Stop()
 			this.Status.Direction = ""
-			this.Status.LCDMsg = this.Cfg.Version + " Arrow key"
+			this.Status.LCDMsg = cfg.Version + " Arrow key"
 		} else {
 			fmt.Println(this.Status.LCDMsg, key, key.Char)
 		}
 	}
 
-	if this.Cfg.LCD.Enabled && oldDirection != this.Status.Direction {
+	if this.LCD != nil && oldDirection != this.Status.Direction {
 		this.LCD.ShowMessage(this.Status.LCDMsg, 2)
 	}
 }

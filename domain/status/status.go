@@ -5,4 +5,5 @@ type Status struct {
 	Direction         string
 	LCDMsg            string
 	MinStopValue      float64
+	SonarData         map[string]float64
 }

@@ -1,6 +1,8 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+)
 
 type ServoKit struct {
 	Enabled       bool    `mapstructure:"SERVOKIT_ENABLED"`
@@ -15,6 +17,7 @@ type ArduinoSonar struct {
 	Bus          int     `mapstructure:"ARDUINO_SONAR_BUS"`
 	Addr         int     `mapstructure:"ARDUINO_SONAR_ADDR"`
 	MinStopValue float64 `mapstructure:"ARDUINO_MIN_SONAR_STOP_VALUE"`
+	DelayInMS    int64   `mapstructure:"ARDUINO_SONAR_DELAY_IN_MS"`
 }
 
 type LCD struct {

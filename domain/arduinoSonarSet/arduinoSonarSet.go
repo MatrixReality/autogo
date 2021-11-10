@@ -3,6 +3,7 @@ package domain
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	LcdDomain "github.com/jtonynet/autogo/domain/lcd"
 	StatusDomain "github.com/jtonynet/autogo/domain/status"
@@ -18,17 +19,28 @@ type Sonar struct {
 	Status        *StatusDomain.Status
 	LCD           *LcdDomain.LCD
 	Topic         string
+	DelayInMS     int64
 }
 
 /*
 TODO: change output.Motors to domain.Motors in future
 */
-func NewSonarSet(SonarSet *input.SonarSet, LCD *LcdDomain.LCD, Motors *output.Motors, MessageBroker *infrastructure.MessageBroker, Status *StatusDomain.Status, Topic string) *Sonar {
-	this := &Sonar{SonarSet: SonarSet, LCD: LCD, Motors: Motors, MessageBroker: MessageBroker, Status: Status, Topic: Topic}
+func NewSonarSet(SonarSet *input.SonarSet, LCD *LcdDomain.LCD, Motors *output.Motors, MessageBroker *infrastructure.MessageBroker, Status *StatusDomain.Status, Topic string, DelayInMS int64) *Sonar {
+	this := &Sonar{SonarSet: SonarSet, LCD: LCD, Motors: Motors, MessageBroker: MessageBroker, Status: Status, Topic: Topic, DelayInMS: DelayInMS}
 	return this
 }
 
+func (this *Sonar) sendDataToMessageBroker(sonarData map[string]float64) {
+	j, err := json.Marshal(sonarData)
+	if err != nil {
+		fmt.Printf("Error: %s", err.Error())
+	} else {
+		this.MessageBroker.Pub(this.Topic, string(j))
+	}
+}
+
 func (this *Sonar) SonarWorker() {
+	delayInMS, _ := time.ParseDuration(fmt.Sprintf("%vms", this.DelayInMS))
 	for true {
 		sonarData, err := this.SonarSet.GetData()
 		if err == nil {
@@ -46,14 +58,11 @@ func (this *Sonar) SonarWorker() {
 			}
 
 			if this.MessageBroker != nil {
-				j, err := json.Marshal(sonarData)
-				if err != nil {
-					fmt.Printf("Error: %s", err.Error())
-				} else {
-					this.MessageBroker.Pub(this.SonarSet.Topic, string(j))
-				}
+				go this.sendDataToMessageBroker(sonarData)
 			}
 
+			this.Status.SonarData = sonarData
+			time.Sleep(delayInMS)
 		}
 	}
 }

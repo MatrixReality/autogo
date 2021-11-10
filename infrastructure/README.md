@@ -2,9 +2,7 @@
 
 - [Instalação MQTT](https://www.instructables.com/Installing-MQTT-BrokerMosquitto-on-Raspberry-Pi/)
 
-- [Boas práticas MQTT Amazon](https://docs.aws.amazon.com/whitepapers/latest/designing-mqtt-topics-aws-iot-core/mqtt-design-best-practices.html)
-
-- [Boas práticas MQTT Gerais](https://github.com/mqtt/mqtt.org/wiki/SYS-Topics)
+- [Boas práticas MQTT Amazon](https://docs.aws.amazon.com/whitepapers/latest/designing-mqtt-topics-aws-iot-core/mqtt-design-best-practices.html) e [Boas práticas MQTT Gerais](https://github.com/mqtt/mqtt.org/wiki/SYS-Topics)
 
 - [Ferramenta MQTT](https://mqtt-explorer.com/)
 
