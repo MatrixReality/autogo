@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"fmt"
-	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	config "github.com/jtonynet/autogo/config"
@@ -50,16 +49,6 @@ func NewMessageBroker(cfg config.MessageBroker) *MessageBroker {
 
 func (this *MessageBroker) Disconnect() {
 	this.Client.Disconnect(this.Cfg.WaitTTLDisconnect)
-}
-
-func (this *MessageBroker) PubT(topic string) {
-	num := 10
-	for i := 0; i < num; i++ {
-		text := fmt.Sprintf("msg: sonar center %d ", i)
-		token := this.Client.Publish(topic, 0, false, text)
-		token.Wait()
-		time.Sleep(time.Second)
-	}
 }
 
 func (this *MessageBroker) Pub(topic string, message string) {
