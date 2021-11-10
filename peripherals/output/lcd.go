@@ -19,7 +19,6 @@ type Display struct {
 	InUse    bool
 }
 
-//func NewLcd(bus int, addr uint8, collumns int) (*deviceD2r2.Lcd, func(), error) {
 func NewLcd(cfg config.LCD) (*Display, error) {
 	//TODO: use lcd i2c gobot solution to 16x2 screen
 
@@ -58,26 +57,19 @@ func (this *Display) DeferAction() {
 	defer this.i2c.Close()
 }
 
-func (this *Display) ShowMessage(message string, line int) error {
+func (this *Display) ShowMessage(message string, l int) error {
 	time.Sleep(5 * time.Millisecond)
 
-	var l deviceD2r2.ShowOptions
-	switch line {
-	case 1:
-		l = deviceD2r2.SHOW_LINE_1
-	case 2:
-		l = deviceD2r2.SHOW_LINE_2
-	case 3:
-		l = deviceD2r2.SHOW_LINE_3
-	case 4:
-		l = deviceD2r2.SHOW_LINE_4
-	default:
-		l = deviceD2r2.SHOW_LINE_1
+	lines := map[int]deviceD2r2.ShowOptions{
+		1: deviceD2r2.SHOW_LINE_1,
+		2: deviceD2r2.SHOW_LINE_2,
+		3: deviceD2r2.SHOW_LINE_3,
+		4: deviceD2r2.SHOW_LINE_4,
 	}
 
 	if this.InUse == false {
 		this.InUse = true
-		err := this.lcd.ShowMessage(rightPad(message, " ", this.collumns), l)
+		err := this.lcd.ShowMessage(rightPad(message, " ", this.collumns), lines[l])
 		if err != nil {
 			this.InUse = false
 			return err
@@ -88,7 +80,7 @@ func (this *Display) ShowMessage(message string, line int) error {
 	}
 
 	time.Sleep(5 * time.Millisecond)
-	return this.ShowMessage(message, line)
+	return this.ShowMessage(message, l)
 }
 
 func rightPad(s string, padStr string, pLen int) string {
