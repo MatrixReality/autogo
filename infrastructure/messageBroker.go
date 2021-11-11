@@ -8,7 +8,7 @@ import (
 )
 
 var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-	//	fmt.Printf("Received message: %s from topic %s\n", msg.Payload(), msg.Topic())
+	//fmt.Printf("Received message: %s from topic %s\n", msg.Payload(), msg.Topic())
 }
 
 var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {

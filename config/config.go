@@ -55,8 +55,9 @@ type MessageBroker struct {
 }
 
 type Config struct {
-	Version   string `mapstructure:"VERSION"`
-	RobotName string `mapstructure:"ROBOT_NAME"`
+	Version     string `mapstructure:"VERSION"`
+	ProjectName string `mapstructure:"PROJECT_NAME"`
+	RobotName   string `mapstructure:"ROBOT_NAME"`
 
 	ServoKit      ServoKit      `mapstructure:",squash"`
 	ArduinoSonar  ArduinoSonar  `mapstructure:",squash"`

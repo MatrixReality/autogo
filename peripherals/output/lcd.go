@@ -20,7 +20,7 @@ type Display struct {
 }
 
 func NewLcd(cfg config.LCD) (*Display, error) {
-	//TODO: use lcd i2c gobot solution to 16x2 screen
+	//TODO: Use lcd i2c gobot solution to 16x2 screen
 
 	bus := cfg.Bus
 	addr := cfg.Addr
