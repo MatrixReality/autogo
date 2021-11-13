@@ -1,6 +1,9 @@
 package domain
 
 type Status struct {
+	Version           string
+	ProjectName       string
+	RobotName         string
 	ColissionDetected bool
 	Direction         string
 	LCDMsg            string

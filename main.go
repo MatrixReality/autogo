@@ -95,6 +95,5 @@ func main() {
 }
 
 func addDevice(deviceList *[]gobot.Device, device gobot.Device) {
-	//Use only register gobot.Device
 	*deviceList = append(*deviceList, device)
 }
