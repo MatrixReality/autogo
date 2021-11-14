@@ -2,7 +2,6 @@ package domain
 
 import (
 	"fmt"
-	"net"
 	"strings"
 
 	infrastructure "github.com/jtonynet/autogo/infrastructure"
@@ -20,6 +19,24 @@ import (
 	output "github.com/jtonynet/autogo/peripherals/output"
 )
 
+var (
+	keyToRobotDirection = map[int]string{
+		113: "Stop",
+		65:  "Front",
+		67:  "Right",
+		66:  "Back",
+		68:  "Left",
+	}
+
+	keyToCamDirection = map[int]string{
+		119: "Top",
+		100: "Right",
+		115: "Down",
+		97:  "Left",
+		120: "CenterAll",
+	}
+)
+
 type Robot struct {
 	MessageBroker *infrastructure.MessageBroker
 
@@ -35,7 +52,7 @@ type Robot struct {
 func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors, servos *output.Servos, display *output.Display, sonarSet *input.SonarSet, cfg *config.Config) *Robot {
 	Status := &StatusDomain.Status{
 		ColissionDetected: false,
-		Direction:         "",
+		Direction:         "Stop",
 		Version:           cfg.Version,
 		ProjectName:       cfg.ProjectName,
 		RobotName:         cfg.RobotName,
@@ -50,7 +67,7 @@ func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors
 	}
 
 	if display != nil {
-		msgLine1 := getOutboundIP()
+		msgLine1 := infrastructure.GetOutboundIP()
 		if cfg.Camera.Enabled {
 			s := []string{msgLine1, cfg.Camera.Port}
 			msgLine1 = strings.Join(s, ":")
@@ -90,25 +107,17 @@ func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors
 }
 
 func (this *Robot) ControllByKeyboard(data interface{}) {
-	key := input.GetKeyEvent(data)
+	var (
+		robotDirection string
+		camDirection   string
+		exist          bool
+	)
 
-	if this.Servos != nil {
-		go this.Servos.ControllPanAndTilt(key.Key)
+	key := input.GetKeyEvent(data).Key
+
+	if robotDirection, exist = keyToRobotDirection[key]; exist && this.Locomotion != nil {
+		go this.Locomotion.ControllMoviment(robotDirection)
+	} else if camDirection, exist = keyToCamDirection[key]; exist && this.Servos != nil {
+		go this.Servos.ControllPanAndTilt(camDirection)
 	}
-
-	if this.Locomotion != nil {
-		go this.Locomotion.ControllMoviment(key.Key)
-	}
-}
-
-func getOutboundIP() string {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		return "offline"
-	}
-
-	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	return localAddr.IP.String()
 }

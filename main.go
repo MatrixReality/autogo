@@ -20,13 +20,14 @@ func main() {
 	}
 
 	var (
-		messageBroker *infrastructure.MessageBroker = nil
-
 		botDevices []gobot.Device
-		motors     *output.Motors  = nil
-		servoKit   *output.Servos  = nil
-		lcd        *output.Display = nil
-		sonarSet   *input.SonarSet = nil
+
+		motors   *output.Motors  = nil
+		servoKit *output.Servos  = nil
+		lcd      *output.Display = nil
+		sonarSet *input.SonarSet = nil
+
+		messageBroker *infrastructure.MessageBroker = nil
 	)
 
 	r := raspi.NewAdaptor()

@@ -3,7 +3,6 @@ package domain
 import (
 	output "github.com/jtonynet/autogo/peripherals/output"
 	"gobot.io/x/gobot/drivers/gpio"
-	"gobot.io/x/gobot/platforms/keyboard"
 )
 
 type Servos struct {
@@ -26,7 +25,7 @@ func NewServos(servoKit *output.Servos) *Servos {
 	return this
 }
 
-func (this *Servos) ControllPanAndTilt(k int) {
+func (this *Servos) ControllPanAndTilt(camDirection string) {
 	cfg := this.Kit.Cfg
 	servoPan := this.Pan
 	servoTilt := this.Tilt
@@ -34,36 +33,36 @@ func (this *Servos) ControllPanAndTilt(k int) {
 	panAngle := int(servoPan.CurrentAngle)
 	tiltAngle := int(servoTilt.CurrentAngle)
 
-	switch k {
-	case keyboard.W:
+	switch camDirection {
+	case "Top":
 		newTilt := tiltAngle - cfg.PanTiltFactor
 		if newTilt < this.Kit.TiltPos["top"] {
 			newTilt = this.Kit.TiltPos["top"]
 		}
 		this.Kit.SetAngle(servoTilt, uint8(newTilt))
 
-	case keyboard.S:
+	case "Down":
 		newTilt := tiltAngle + cfg.PanTiltFactor
 		if newTilt > this.Kit.TiltPos["down"] {
 			newTilt = this.Kit.TiltPos["down"]
 		}
 		this.Kit.SetAngle(servoTilt, uint8(newTilt))
 
-	case keyboard.A:
+	case "Left":
 		newPan := panAngle + cfg.PanTiltFactor
 		if newPan > this.Kit.PanPos["left"] {
 			newPan = this.Kit.PanPos["left"]
 		}
 		this.Kit.SetAngle(servoPan, uint8(newPan))
 
-	case keyboard.D:
+	case "Right":
 		newPan := panAngle - cfg.PanTiltFactor
 		if newPan < this.Kit.PanPos["right"] {
 			newPan = this.Kit.PanPos["right"]
 		}
 		this.Kit.SetAngle(servoPan, uint8(newPan))
 
-	case keyboard.X:
+	case "CenterAll":
 		this.Kit.SetCenter(servoPan)
 		this.Kit.SetAngle(servoTilt, uint8(this.Kit.TiltPos["horizon"]))
 	}

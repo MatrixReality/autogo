@@ -4,7 +4,6 @@ import (
 	LcdDomain "github.com/jtonynet/autogo/domain/lcd"
 	StatusDomain "github.com/jtonynet/autogo/domain/status"
 	output "github.com/jtonynet/autogo/peripherals/output"
-	"gobot.io/x/gobot/platforms/keyboard"
 )
 
 type Locomotion struct {
@@ -38,36 +37,36 @@ func (this *Locomotion) Stop() {
 	this.Motors.Stop()
 }
 
-func (this *Locomotion) ControllMoviment(k int) {
+func (this *Locomotion) ControllMoviment(direction string) {
 	oldDirection := this.Status.Direction
 	cfg := this.Motors.Cfg
 
-	switch k {
-	case keyboard.ArrowUp:
+	switch direction {
+	case "Front":
 		if !this.Status.ColissionDetected {
 			this.Forward(cfg.MaxSpeed)
 			this.Status.Direction = "Front"
 			this.Status.LCDMsg = this.Status.Direction
 		}
 
-	case keyboard.ArrowDown:
+	case "Back":
 		this.Backward(cfg.MaxSpeed)
 		this.Status.Direction = "Back"
 		this.Status.LCDMsg = this.Status.Direction
 
-	case keyboard.ArrowRight:
+	case "Right":
 		this.Left(cfg.MaxSpeed)
 		this.Status.Direction = "Right"
 		this.Status.LCDMsg = this.Status.Direction
 
-	case keyboard.ArrowLeft:
+	case "Left":
 		this.Right(cfg.MaxSpeed)
 		this.Status.Direction = "Left"
 		this.Status.LCDMsg = this.Status.Direction
 
-	case keyboard.Q:
+	case "Stop":
 		this.Stop()
-		this.Status.Direction = ""
+		this.Status.Direction = "Stop"
 		this.Status.LCDMsg = this.Status.Version + " Arrow key"
 	}
 
