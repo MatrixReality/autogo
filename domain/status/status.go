@@ -9,4 +9,5 @@ type Status struct {
 	LCDMsg            string
 	MinStopValue      float64
 	SonarData         map[string]float64
+	SonarSelfControll bool
 }

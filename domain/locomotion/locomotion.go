@@ -66,6 +66,7 @@ func (this *Locomotion) ControllMoviment(direction string) {
 
 	case "Stop":
 		this.Stop()
+		this.Status.SonarSelfControll = false
 		this.Status.Direction = "Stop"
 		this.Status.LCDMsg = this.Status.Version + " Arrow key"
 	}

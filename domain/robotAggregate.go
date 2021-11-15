@@ -100,7 +100,10 @@ func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors
 			messageBroker.Sub(sonarTopic)
 		}
 
-		go sonarDomain.SonarWorker()
+		//go sonarDomain.PreventCrashWorker()
+
+		this.Status.SonarSelfControll = true
+		go sonarDomain.SelfControllWorker()
 	}
 
 	return this
