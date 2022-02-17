@@ -37,7 +37,7 @@ func (this *Locomotion) Stop() {
 	this.Motors.Stop()
 }
 
-func (this *Locomotion) ControllMoviment(direction string) {
+func (this *Locomotion) Move(direction string) {
 	oldDirection := this.Status.Direction
 	cfg := this.Motors.Cfg
 
@@ -66,9 +66,28 @@ func (this *Locomotion) ControllMoviment(direction string) {
 
 	case "Stop":
 		this.Stop()
-		this.Status.SonarSelfControll = false
+
+		if this.Status.SonarSelfControll {
+			this.Status.SonarSelfControll = false
+			this.Status.SonarPreventCollision = true
+		}
+
 		this.Status.Direction = "Stop"
 		this.Status.LCDMsg = this.Status.Version + " Arrow key"
+
+	case "sonarPilot":
+		if !this.Status.SonarSelfControll {
+			//this.Stop()
+			this.Status.SonarSelfControll = true
+			this.Status.SonarPreventCollision = false
+			this.Status.LCDMsg = this.Status.Version + " Snr Pilot"
+
+		} else {
+			this.Status.SonarSelfControll = false
+			this.Status.SonarPreventCollision = true
+			this.Status.LCDMsg = this.Status.Version + " Arrow key"
+		}
+
 	}
 
 	if this.LCD != nil && oldDirection != this.Status.Direction {

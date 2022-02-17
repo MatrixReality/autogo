@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"fmt"
+	"strconv"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	config "github.com/jtonynet/autogo/config"
@@ -56,8 +57,24 @@ func (this *MessageBroker) Pub(topic string, message string) {
 	token.Wait()
 }
 
-func (this *MessageBroker) Sub(topic string) {
-	token := this.Client.Subscribe(topic, 1, nil)
+func (this *MessageBroker) Sub(topic string, receiverHandler func(mqtt.Client, mqtt.Message)) {
+	if receiverHandler == nil {
+		receiverHandler = defaultReceiver
+	}
+
+	token := this.Client.Subscribe(topic, 1, receiverHandler)
 	token.Wait()
-	//fmt.Printf("Subscribed to topic: %s ", topic)
+	fmt.Println("\n-----------")
+	fmt.Printf("Subscribed to topic: %s ", topic)
+	fmt.Println("\n-----------")
+}
+
+func defaultReceiver(client mqtt.Client, msg mqtt.Message) {
+	msg.Ack()
+	output0 := "Robot.Controll(\"default\" \"" + string(msg.Payload()) + "\")"
+	output := "message id:" + strconv.Itoa(int(msg.MessageID())) + " message = " + string(msg.Payload())
+	fmt.Println("\n++++++++++++++++")
+	fmt.Println(output0)
+	fmt.Println(output)
+	fmt.Println("\n++++++++++++++++")
 }

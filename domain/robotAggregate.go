@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	infrastructure "github.com/jtonynet/autogo/infrastructure"
 
 	SonarDomain "github.com/jtonynet/autogo/domain/arduinoSonarSet"
 	LcdDomain "github.com/jtonynet/autogo/domain/lcd"
 	LocomotionDomain "github.com/jtonynet/autogo/domain/locomotion"
-	domain "github.com/jtonynet/autogo/domain/locomotion"
 	ServosDomain "github.com/jtonynet/autogo/domain/servos"
 	StatusDomain "github.com/jtonynet/autogo/domain/status"
 
@@ -26,6 +26,7 @@ var (
 		67:  "Right",
 		66:  "Back",
 		68:  "Left",
+		112: "sonarPilot",
 	}
 
 	keyToCamDirection = map[int]string{
@@ -66,8 +67,10 @@ func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors
 		this.Servos = servosDomain
 	}
 
+	msgLine1 := infrastructure.GetOutboundIP()
+	fmt.Println("\n" + msgLine1 + "\n")
+
 	if display != nil {
-		msgLine1 := infrastructure.GetOutboundIP()
 		if cfg.Camera.Enabled {
 			s := []string{msgLine1, cfg.Camera.Port}
 			msgLine1 = strings.Join(s, ":")
@@ -78,7 +81,7 @@ func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors
 
 		//TODO: Test only, remove after create robot client subscription
 		if messageBroker != nil {
-			messageBroker.Sub(LCDTopic)
+			messageBroker.Sub(LCDTopic, nil)
 		}
 
 		this.LCD.ShowMessage(msgLine1, 1)
@@ -86,7 +89,7 @@ func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors
 	}
 
 	if motors != nil {
-		locomotionDomain := domain.NewLocomotion(motors, this.LCD, this.Status)
+		locomotionDomain := LocomotionDomain.NewLocomotion(motors, this.LCD, this.Status)
 		this.Locomotion = locomotionDomain
 	}
 
@@ -96,31 +99,57 @@ func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors
 		this.SonarSet = sonarDomain
 
 		//TODO: Test only, remove after create robot client subscription
-		if messageBroker != nil {
-			messageBroker.Sub(sonarTopic)
-		}
+		// if messageBroker != nil {
+		// 	//go messageBroker.Sub(sonarTopic, messageBroker.Sub)
+		// }
 
-		//go sonarDomain.PreventCrashWorker()
+		this.Status.SonarSelfControll = false
+		this.Status.SonarPreventCollision = true
 
-		this.Status.SonarSelfControll = true
-		go sonarDomain.SelfControllWorker()
+		//go sonarDomain.PreventCollisionWorker()
+		//go sonarDomain.SelfControllWorker()
+	}
+
+	if messageBroker != nil {
+		moveTopic := fmt.Sprintf("%s/%s/move", cfg.ProjectName, cfg.RobotName)
+		go messageBroker.Sub(moveTopic, this.MoveMessageHandler)
+
+		testTopic := fmt.Sprintf("%s/%s/test", cfg.ProjectName, cfg.RobotName)
+		go messageBroker.Sub(testTopic, nil)
+
 	}
 
 	return this
 }
 
 func (this *Robot) ControllByKeyboard(data interface{}) {
-	var (
-		robotDirection string
-		camDirection   string
-		exist          bool
-	)
-
 	key := input.GetKeyEvent(data).Key
 
-	if robotDirection, exist = keyToRobotDirection[key]; exist && this.Locomotion != nil {
-		go this.Locomotion.ControllMoviment(robotDirection)
-	} else if camDirection, exist = keyToCamDirection[key]; exist && this.Servos != nil {
-		go this.Servos.ControllPanAndTilt(camDirection)
+	var (
+		action string
+		exist  bool
+	)
+
+	if action, exist = keyToRobotDirection[key]; exist {
+		this.controll("Direction", action)
+	} else if action, exist = keyToCamDirection[key]; exist {
+		this.controll("Cam", action)
 	}
+}
+
+func (this *Robot) controll(command string, action string) {
+	if command == "Direction" && this.Locomotion != nil {
+		go this.Locomotion.Move(action)
+	} else if command == "Cam" && this.Servos != nil {
+		go this.Servos.ControllPanAndTilt(action)
+	}
+}
+
+func (this *Robot) MoveMessageHandler(client mqtt.Client, msg mqtt.Message) {
+	msg.Ack()
+
+	//output0 := "ROBOT:: this.Robot.Controll(\"Direction\" \", " + string(msg.Payload()) + "\")"
+	//fmt.Println(output0)
+
+	this.controll("Direction", string(msg.Payload()))
 }

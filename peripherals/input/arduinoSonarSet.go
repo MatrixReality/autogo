@@ -2,7 +2,6 @@ package peripherals
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -54,8 +53,6 @@ func (this *SonarSet) GetData() (map[string]float64, error) {
 	if bytesRead == sonarByteLen {
 		sonarData = string(buf[:])
 	}
-
-	fmt.Println(sonarData)
 
 	dataValues := strings.Split(string(sonarData), ",")
 	if len(dataValues) > 1 && len(datakeys) > len(dataValues)-1 {
