@@ -35,11 +35,14 @@ func NewIMU(imu *input.IMU, messageBroker *infrastructure.MessageBroker, status 
 
 func (this *IMU) Worker() {
 	for true {
-		this.IMU.Driver.GetData()
 
-		fmt.Println("Accelerometer D:", this.IMU.Driver.Accelerometer)
-		fmt.Println("Gyroscope D:", this.IMU.Driver.Gyroscope)
-		fmt.Println("Temperature D:", this.IMU.Driver.Temperature)
+		this.IMU.GetData()
+
+		fmt.Println("Model", this.IMU.GetModel())
+		fmt.Println("Accelerometer", this.IMU.GetAccelerometer())
+		fmt.Println("Gyroscope", this.IMU.GetGyroscope())
+		fmt.Println("Temperature", this.IMU.GetTemperature())
+
 		fmt.Println()
 		fmt.Println()
 

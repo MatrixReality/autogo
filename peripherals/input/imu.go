@@ -31,3 +31,23 @@ func NewIMU(a *raspi.Adaptor, cfg config.IMU) *IMU {
 func (this *IMU) Init() {
 	this.Driver.Start()
 }
+
+func (this *IMU) GetData() {
+	this.Driver.GetData()
+}
+
+func (this *IMU) GetAccelerometer() i2c.ThreeDData {
+	return this.Driver.Accelerometer
+}
+
+func (this *IMU) GetGyroscope() i2c.ThreeDData {
+	return this.Driver.Gyroscope
+}
+
+func (this *IMU) GetTemperature() int16 {
+	return this.Driver.Temperature
+}
+
+func (this *IMU) GetModel() string {
+	return this.Cfg.Model
+}

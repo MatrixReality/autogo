@@ -6,7 +6,7 @@ import (
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/platforms/raspi"
 
-	application "github.com/jtonynet/autogo/application"
+	robotHandler "github.com/jtonynet/autogo/application"
 	config "github.com/jtonynet/autogo/config"
 	infrastructure "github.com/jtonynet/autogo/infrastructure"
 	input "github.com/jtonynet/autogo/peripherals/input"
@@ -83,7 +83,7 @@ func main() {
 	}
 
 	work := func() {
-		application.Init(messageBroker, keys, motors, servoKit, lcd, sonarSet, imu, cfg)
+		robotHandler.Init(messageBroker, keys, motors, servoKit, lcd, sonarSet, imu, cfg)
 
 		///CAMERA STREAM
 		if cfg.Camera.Enabled {
