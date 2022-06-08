@@ -6,18 +6,18 @@ import (
 
 	StatusDomain "github.com/jtonynet/autogo/domain/status"
 	infrastructure "github.com/jtonynet/autogo/infrastructure"
-	input "github.com/jtonynet/autogo/peripherals/input"
+	sensors "github.com/jtonynet/autogo/peripherals/sensors"
 )
 
 type IMU struct {
-	IMU           *input.IMU
+	IMU           *sensors.IMU
 	MessageBroker *infrastructure.MessageBroker
 	Status        *StatusDomain.Status
 	Topic         string
 	Delay         time.Duration
 }
 
-func NewIMU(imu *input.IMU, messageBroker *infrastructure.MessageBroker, status *StatusDomain.Status, topic string) *IMU {
+func NewIMU(imu *sensors.IMU, messageBroker *infrastructure.MessageBroker, status *StatusDomain.Status, topic string) *IMU {
 	delay, _ := time.ParseDuration(imu.Cfg.Delay)
 	this := &IMU{
 		IMU:           imu,

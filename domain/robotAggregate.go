@@ -16,8 +16,8 @@ import (
 
 	config "github.com/jtonynet/autogo/config"
 
-	input "github.com/jtonynet/autogo/peripherals/input"
-	output "github.com/jtonynet/autogo/peripherals/output"
+	output "github.com/jtonynet/autogo/peripherals/actuators"
+	sensors "github.com/jtonynet/autogo/peripherals/sensors"
 )
 
 var (
@@ -52,7 +52,7 @@ type Robot struct {
 	Cfg *config.Config
 }
 
-func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors, servos *output.Servos, display *output.Display, sonarSet *input.SonarSet, imu *input.IMU, cfg *config.Config) *Robot {
+func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors, servos *output.Servos, display *output.Display, sonarSet *sensors.SonarSet, imu *sensors.IMU, cfg *config.Config) *Robot {
 	Status := &StatusDomain.Status{
 		ColissionDetected: false,
 		Direction:         "Stop",
@@ -132,7 +132,7 @@ func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors
 }
 
 func (this *Robot) ControllByKeyboard(data interface{}) {
-	key := input.GetKeyEvent(data).Key
+	key := sensors.GetKeyEvent(data).Key
 
 	var (
 		action string

@@ -9,8 +9,8 @@ import (
 	robotHandler "github.com/jtonynet/autogo/application"
 	config "github.com/jtonynet/autogo/config"
 	infrastructure "github.com/jtonynet/autogo/infrastructure"
-	input "github.com/jtonynet/autogo/peripherals/input"
-	output "github.com/jtonynet/autogo/peripherals/output"
+	output "github.com/jtonynet/autogo/peripherals/actuators"
+	sensors "github.com/jtonynet/autogo/peripherals/sensors"
 )
 
 func main() {
@@ -22,18 +22,18 @@ func main() {
 	var (
 		botDevices []gobot.Device
 
-		motors   *output.Motors  = nil
-		servoKit *output.Servos  = nil
-		lcd      *output.Display = nil
-		sonarSet *input.SonarSet = nil
-		imu      *input.IMU      = nil
+		motors   *output.Motors    = nil
+		servoKit *output.Servos    = nil
+		lcd      *output.Display   = nil
+		sonarSet *sensors.SonarSet = nil
+		imu      *sensors.IMU      = nil
 
 		messageBroker *infrastructure.MessageBroker = nil
 	)
 
 	r := raspi.NewAdaptor()
 
-	keys := input.GetKeyboard()
+	keys := sensors.GetKeyboard()
 	addDevice(&botDevices, keys.Driver)
 
 	if cfg.MessageBroker.Enabled {
@@ -70,7 +70,7 @@ func main() {
 
 	///ARDUINO SONAR SET
 	if cfg.ArduinoSonar.Enabled {
-		sonarSet, err = input.NewSonarSet(r, cfg.ArduinoSonar)
+		sonarSet, err = sensors.NewSonarSet(r, cfg.ArduinoSonar)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -78,7 +78,7 @@ func main() {
 
 	///IMU
 	if cfg.IMU.Enabled {
-		imu = input.NewIMU(r, cfg.IMU)
+		imu = sensors.NewIMU(r, cfg.IMU)
 		addDevice(&botDevices, imu.Driver)
 	}
 
@@ -87,7 +87,7 @@ func main() {
 
 		///CAMERA STREAM
 		if cfg.Camera.Enabled {
-			go input.CameraServeStream(cfg.Camera)
+			go sensors.CameraServeStream(cfg.Camera)
 		}
 	}
 

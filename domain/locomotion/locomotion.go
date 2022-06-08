@@ -3,7 +3,7 @@ package domain
 import (
 	LcdDomain "github.com/jtonynet/autogo/domain/lcd"
 	StatusDomain "github.com/jtonynet/autogo/domain/status"
-	output "github.com/jtonynet/autogo/peripherals/output"
+	output "github.com/jtonynet/autogo/peripherals/actuators"
 )
 
 type Locomotion struct {

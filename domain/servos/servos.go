@@ -1,7 +1,7 @@
 package domain
 
 import (
-	output "github.com/jtonynet/autogo/peripherals/output"
+	output "github.com/jtonynet/autogo/peripherals/actuators"
 	"gobot.io/x/gobot/drivers/gpio"
 )
 

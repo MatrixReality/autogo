@@ -9,11 +9,11 @@ import (
 	locomotionDomain "github.com/jtonynet/autogo/domain/locomotion"
 	StatusDomain "github.com/jtonynet/autogo/domain/status"
 	infrastructure "github.com/jtonynet/autogo/infrastructure"
-	input "github.com/jtonynet/autogo/peripherals/input"
+	sensors "github.com/jtonynet/autogo/peripherals/sensors"
 )
 
 type Sonar struct {
-	SonarSet      *input.SonarSet
+	SonarSet      *sensors.SonarSet
 	Locomotion    *locomotionDomain.Locomotion
 	MessageBroker *infrastructure.MessageBroker
 	Status        *StatusDomain.Status
@@ -22,7 +22,7 @@ type Sonar struct {
 	Delay         time.Duration
 }
 
-func NewSonarSet(sonarSet *input.SonarSet, LCD *LcdDomain.LCD, locomotion *locomotionDomain.Locomotion, messageBroker *infrastructure.MessageBroker, status *StatusDomain.Status, topic string) *Sonar {
+func NewSonarSet(sonarSet *sensors.SonarSet, LCD *LcdDomain.LCD, locomotion *locomotionDomain.Locomotion, messageBroker *infrastructure.MessageBroker, status *StatusDomain.Status, topic string) *Sonar {
 	delay, _ := time.ParseDuration(sonarSet.Cfg.Delay)
 	this := &Sonar{
 		SonarSet:      sonarSet,

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	infrastructure "github.com/jtonynet/autogo/infrastructure"
-	output "github.com/jtonynet/autogo/peripherals/output"
+	output "github.com/jtonynet/autogo/peripherals/actuators"
 )
 
 type LCD struct {
