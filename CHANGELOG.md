@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Perifericos (sensors/output) podem ser habilitados por envVars
+- Perifericos (sensors/actuators) podem ser habilitados por envVars
     - Montagem minima apenas com motores (ou qualquer outra combinação) agora pode ser configurada nas envs
     - Sem a necessidade de montar o projeto completo. Habilite apenas os recursos que vai plugar no esquema
 - Adotando arquitetura hexagonal, desacoplando lib goBot com wrappers (problemas de desacoplamento com o keyboard)

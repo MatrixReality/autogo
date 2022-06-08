@@ -9,7 +9,7 @@ import (
 	robotHandler "github.com/jtonynet/autogo/application"
 	config "github.com/jtonynet/autogo/config"
 	infrastructure "github.com/jtonynet/autogo/infrastructure"
-	output "github.com/jtonynet/autogo/peripherals/actuators"
+	actuators "github.com/jtonynet/autogo/peripherals/actuators"
 	sensors "github.com/jtonynet/autogo/peripherals/sensors"
 )
 
@@ -22,11 +22,11 @@ func main() {
 	var (
 		botDevices []gobot.Device
 
-		motors   *output.Motors    = nil
-		servoKit *output.Servos    = nil
-		lcd      *output.Display   = nil
-		sonarSet *sensors.SonarSet = nil
-		imu      *sensors.IMU      = nil
+		motors   *actuators.Motors  = nil
+		servoKit *actuators.Servos  = nil
+		lcd      *actuators.Display = nil
+		sonarSet *sensors.SonarSet  = nil
+		imu      *sensors.IMU       = nil
 
 		messageBroker *infrastructure.MessageBroker = nil
 	)
@@ -42,14 +42,14 @@ func main() {
 
 	///MOTORS
 	if cfg.Motors.Enabled {
-		motors = output.NewMotors(r, cfg.Motors)
+		motors = actuators.NewMotors(r, cfg.Motors)
 		addDevice(&botDevices, motors.MotorA)
 		addDevice(&botDevices, motors.MotorB)
 	}
 
 	///SERVOKIT
 	if cfg.ServoKit.Enabled {
-		servoKit = output.NewServos(r, cfg.ServoKit)
+		servoKit = actuators.NewServos(r, cfg.ServoKit)
 		servoKit.Add("0", "pan")
 		servoKit.Add("1", "tilt")
 
@@ -60,7 +60,7 @@ func main() {
 
 	///LCD
 	if cfg.LCD.Enabled {
-		lcd, err = output.NewLcd(cfg.LCD)
+		lcd, err = actuators.NewLcd(cfg.LCD)
 		if err != nil {
 			log.Fatal(err)
 		}

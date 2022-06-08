@@ -16,7 +16,7 @@ import (
 
 	config "github.com/jtonynet/autogo/config"
 
-	output "github.com/jtonynet/autogo/peripherals/actuators"
+	actuators "github.com/jtonynet/autogo/peripherals/actuators"
 	sensors "github.com/jtonynet/autogo/peripherals/sensors"
 )
 
@@ -52,7 +52,7 @@ type Robot struct {
 	Cfg *config.Config
 }
 
-func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors, servos *output.Servos, display *output.Display, sonarSet *sensors.SonarSet, imu *sensors.IMU, cfg *config.Config) *Robot {
+func NewRobot(messageBroker *infrastructure.MessageBroker, motors *actuators.Motors, servos *actuators.Servos, display *actuators.Display, sonarSet *sensors.SonarSet, imu *sensors.IMU, cfg *config.Config) *Robot {
 	Status := &StatusDomain.Status{
 		ColissionDetected: false,
 		Direction:         "Stop",

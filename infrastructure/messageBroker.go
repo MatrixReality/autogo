@@ -83,9 +83,9 @@ func (this *MessageBroker) Sub(topic string, receiverHandler func(mqtt.Client, m
 func defaultReceiver(client mqtt.Client, msg mqtt.Message) {
 	msg.Ack()
 	output0 := "Robot.Controll(\"default\" \"" + string(msg.Payload()) + "\")"
-	output := "message id:" + strconv.Itoa(int(msg.MessageID())) + " message = " + string(msg.Payload())
+	actuators := "message id:" + strconv.Itoa(int(msg.MessageID())) + " message = " + string(msg.Payload())
 	fmt.Println("\n++++++++++++++++")
 	fmt.Println(output0)
-	fmt.Println(output)
+	fmt.Println(actuators)
 	fmt.Println("\n++++++++++++++++")
 }

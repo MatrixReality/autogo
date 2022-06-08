@@ -3,16 +3,16 @@ package domain
 import (
 	LcdDomain "github.com/jtonynet/autogo/domain/lcd"
 	StatusDomain "github.com/jtonynet/autogo/domain/status"
-	output "github.com/jtonynet/autogo/peripherals/actuators"
+	actuators "github.com/jtonynet/autogo/peripherals/actuators"
 )
 
 type Locomotion struct {
-	Motors *output.Motors
+	Motors *actuators.Motors
 	Status *StatusDomain.Status
 	LCD    *LcdDomain.LCD
 }
 
-func NewLocomotion(motors *output.Motors, lcd *LcdDomain.LCD, status *StatusDomain.Status) *Locomotion {
+func NewLocomotion(motors *actuators.Motors, lcd *LcdDomain.LCD, status *StatusDomain.Status) *Locomotion {
 	this := &Locomotion{Motors: motors, LCD: lcd, Status: status}
 	return this
 }
