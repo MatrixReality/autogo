@@ -1,8 +1,6 @@
 package domain
 
 import (
-	"fmt"
-
 	output "github.com/jtonynet/autogo/peripherals/output"
 	"gobot.io/x/gobot/drivers/gpio"
 )
@@ -28,11 +26,6 @@ func NewServos(servoKit *output.Servos) *Servos {
 }
 
 func (this *Servos) ControllPanAndTilt(camDirection string) {
-
-	fmt.Println("\n-=-=-=-=-=-=-")
-	fmt.Println(camDirection)
-	fmt.Println("\n-=-=-=-=-=-=-")
-
 	cfg := this.Kit.Cfg
 	servoPan := this.Pan
 	servoTilt := this.Tilt

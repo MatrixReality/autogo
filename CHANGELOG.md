@@ -70,3 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.0.4]: https://github.com/jtonynet/autogo/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/jtonynet/autogo/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/jtonynet/autogo/releases/tag/v0.0.2
+
+cd Documents/tools
+./ngrok http -bind-tls=true 9001
+./ngrok http -bind-tls=true 8081

@@ -8,6 +8,7 @@ import (
 	infrastructure "github.com/jtonynet/autogo/infrastructure"
 
 	SonarDomain "github.com/jtonynet/autogo/domain/arduinoSonarSet"
+	IMUDomain "github.com/jtonynet/autogo/domain/imu"
 	LcdDomain "github.com/jtonynet/autogo/domain/lcd"
 	LocomotionDomain "github.com/jtonynet/autogo/domain/locomotion"
 	ServosDomain "github.com/jtonynet/autogo/domain/servos"
@@ -45,12 +46,13 @@ type Robot struct {
 	Locomotion *LocomotionDomain.Locomotion
 	Servos     *ServosDomain.Servos
 	SonarSet   *SonarDomain.Sonar
+	IMU        *IMUDomain.IMU
 	Status     *StatusDomain.Status
 
 	Cfg *config.Config
 }
 
-func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors, servos *output.Servos, display *output.Display, sonarSet *input.SonarSet, cfg *config.Config) *Robot {
+func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors, servos *output.Servos, display *output.Display, sonarSet *input.SonarSet, imu *input.IMU, cfg *config.Config) *Robot {
 	Status := &StatusDomain.Status{
 		ColissionDetected: false,
 		Direction:         "Stop",
@@ -99,15 +101,22 @@ func NewRobot(messageBroker *infrastructure.MessageBroker, motors *output.Motors
 		this.SonarSet = sonarDomain
 
 		//TODO: Test only, remove after create robot client subscription
-		// if messageBroker != nil {
-		// 	//go messageBroker.Sub(sonarTopic, messageBroker.Sub)
-		// }
+		if messageBroker != nil {
+			go messageBroker.Sub(sonarTopic, nil)
+		}
 
 		this.Status.SonarSelfControll = false
 		this.Status.SonarPreventCollision = true
 
-		//go sonarDomain.PreventCollisionWorker()
+		go sonarDomain.PreventCollisionWorker()
 		//go sonarDomain.SelfControllWorker()
+	}
+
+	if imu != nil {
+		imuTopic := fmt.Sprintf("%s/%s/imu", cfg.ProjectName, cfg.RobotName)
+		imuDomain := IMUDomain.NewIMU(imu, messageBroker, Status, imuTopic)
+
+		go imuDomain.Worker()
 	}
 
 	if messageBroker != nil {
@@ -148,8 +157,8 @@ func (this *Robot) controll(command string, action string) {
 func (this *Robot) MoveMessageHandler(client mqtt.Client, msg mqtt.Message) {
 	msg.Ack()
 
-	//output0 := "ROBOT:: this.Robot.Controll(\"Direction\" \", " + string(msg.Payload()) + "\")"
-	//fmt.Println(output0)
+	output0 := "ROBOT:: this.Robot.Controll(\"Direction\", " + string(msg.Payload()) + "\")"
+	fmt.Println(output0)
 
 	this.controll("Direction", string(msg.Payload()))
 }

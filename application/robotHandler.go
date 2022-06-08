@@ -14,9 +14,9 @@ var (
 	colissionDetected bool   = false
 )
 
-func Init(messageBroker *infrastructure.MessageBroker, kbd *input.Keyboard, motors *output.Motors, servoKit *output.Servos, lcd *output.Display, sonarSet *input.SonarSet, cfg *config.Config) {
+func Init(messageBroker *infrastructure.MessageBroker, kbd *input.Keyboard, motors *output.Motors, servoKit *output.Servos, lcd *output.Display, sonarSet *input.SonarSet, imu *input.IMU, cfg *config.Config) {
 	keys := kbd.Driver
-	robotDomain := domain.NewRobot(messageBroker, motors, servoKit, lcd, sonarSet, cfg)
+	robotDomain := domain.NewRobot(messageBroker, motors, servoKit, lcd, sonarSet, imu, cfg)
 
 	keys.On(kbd.Key, func(data interface{}) {
 		robotDomain.ControllByKeyboard(data)

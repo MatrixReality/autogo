@@ -27,6 +27,14 @@ type LCD struct {
 	Collumns int   `mapstructure:"LCD_COLLUMNS"`
 }
 
+type IMU struct {
+	Enabled bool   `mapstructure:"IMU_ENABLED"`
+	Model   string `mapstructure:"IMU_MODEL"`
+	Bus     uint8  `mapstructure:"IMU_BUS"`
+	Addr    uint8  `mapstructure:"IMU_ADDR"`
+	Delay   string `mapstructure:"IMU_DELAY"`
+}
+
 type Motors struct {
 	Enabled  bool   `mapstructure:"MOTORS_ENABLED"`
 	APWMPin  string `mapstructure:"MOTOR_A_PWM_PIN"`
@@ -64,6 +72,7 @@ type Config struct {
 	Camera        Camera        `mapstructure:",squash"`
 	Motors        Motors        `mapstructure:",squash"`
 	LCD           LCD           `mapstructure:",squash"`
+	IMU           IMU           `mapstructure:",squash"`
 	MessageBroker MessageBroker `mapstructure:",squash"`
 }
 

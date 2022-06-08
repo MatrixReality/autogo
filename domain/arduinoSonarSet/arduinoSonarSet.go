@@ -33,7 +33,7 @@ func NewSonarSet(sonarSet *input.SonarSet, LCD *LcdDomain.LCD, locomotion *locom
 		Topic:         topic,
 		Delay:         delay,
 	}
-
+	time.Sleep(time.Second * 5)
 	return this
 }
 

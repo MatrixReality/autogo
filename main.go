@@ -26,6 +26,7 @@ func main() {
 		servoKit *output.Servos  = nil
 		lcd      *output.Display = nil
 		sonarSet *input.SonarSet = nil
+		imu      *input.IMU      = nil
 
 		messageBroker *infrastructure.MessageBroker = nil
 	)
@@ -75,8 +76,14 @@ func main() {
 		}
 	}
 
+	///IMU
+	if cfg.IMU.Enabled {
+		imu = input.NewIMU(r, cfg.IMU)
+		addDevice(&botDevices, imu.Driver)
+	}
+
 	work := func() {
-		application.Init(messageBroker, keys, motors, servoKit, lcd, sonarSet, cfg)
+		application.Init(messageBroker, keys, motors, servoKit, lcd, sonarSet, imu, cfg)
 
 		///CAMERA STREAM
 		if cfg.Camera.Enabled {
