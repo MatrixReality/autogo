@@ -21,20 +21,23 @@ const (
 type Motors struct {
 	MotorA *gpio.MotorDriver
 	MotorB *gpio.MotorDriver
+	Cfg    config.Motors
 }
 
 func NewMotors(a *raspi.Adaptor, cfg config.Motors) *Motors {
 	MotorA := gpio.NewMotorDriver(a, cfg.APWMPin)
 	MotorA.ForwardPin = cfg.ADir1Pin
 	MotorA.BackwardPin = cfg.ADir2Pin
+	//MotorA.CurrentMode = "analog"
 	MotorA.SetName("Motor-A")
 
 	MotorB := gpio.NewMotorDriver(a, cfg.BPWMPin)
 	MotorB.ForwardPin = cfg.BDir1Pin
 	MotorB.BackwardPin = cfg.BDir2Pin
+	//MotorB.CurrentMode = "analog"
 	MotorB.SetName("Motor-B")
 
-	this := &Motors{MotorA: MotorA, MotorB: MotorB}
+	this := &Motors{MotorA: MotorA, MotorB: MotorB, Cfg: cfg}
 
 	motors[maIndex] = MotorA
 	motors[mbIndex] = MotorB

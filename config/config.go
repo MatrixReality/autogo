@@ -17,7 +17,7 @@ type ArduinoSonar struct {
 	Bus          int     `mapstructure:"ARDUINO_SONAR_BUS"`
 	Addr         int     `mapstructure:"ARDUINO_SONAR_ADDR"`
 	MinStopValue float64 `mapstructure:"ARDUINO_MIN_SONAR_STOP_VALUE"`
-	DelayInMS    int64   `mapstructure:"ARDUINO_SONAR_DELAY_IN_MS"`
+	Delay        string  `mapstructure:"ARDUINO_SONAR_DELAY"`
 }
 
 type LCD struct {
@@ -25,6 +25,14 @@ type LCD struct {
 	Bus      int   `mapstructure:"LCD_BUS"`
 	Addr     uint8 `mapstructure:"LCD_ADDR"`
 	Collumns int   `mapstructure:"LCD_COLLUMNS"`
+}
+
+type IMU struct {
+	Enabled bool   `mapstructure:"IMU_ENABLED"`
+	Model   string `mapstructure:"IMU_MODEL"`
+	Bus     uint8  `mapstructure:"IMU_BUS"`
+	Addr    uint8  `mapstructure:"IMU_ADDR"`
+	Delay   string `mapstructure:"IMU_DELAY"`
 }
 
 type Motors struct {
@@ -64,6 +72,7 @@ type Config struct {
 	Camera        Camera        `mapstructure:",squash"`
 	Motors        Motors        `mapstructure:",squash"`
 	LCD           LCD           `mapstructure:",squash"`
+	IMU           IMU           `mapstructure:",squash"`
 	MessageBroker MessageBroker `mapstructure:",squash"`
 }
 
