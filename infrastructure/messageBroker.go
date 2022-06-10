@@ -64,8 +64,19 @@ func (this *MessageBroker) Disconnect() {
 }
 
 func (this *MessageBroker) Pub(topic string, message string) {
+
 	token := this.Client.Publish(topic, 0, false, message)
-	token.Wait()
+	t := token.Wait()
+
+	if t {
+		fmt.Println("OK PRA CARALEO")
+	} else {
+		fmt.Println("SINTO EM INFORMAR QUE DEU RUIM")
+	}
+
+	fmt.Println("\n-----------")
+	fmt.Printf("publish TEST %s on topic: %s ", message, topic)
+	fmt.Println("\n-----------")
 }
 
 func (this *MessageBroker) Sub(topic string, receiverHandler func(mqtt.Client, mqtt.Message)) {

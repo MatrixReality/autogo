@@ -159,6 +159,16 @@ func (this *Robot) MoveMessageHandler(client mqtt.Client, msg mqtt.Message) {
 
 	output0 := "ROBOT:: this.Robot.Controll(\"Direction\", " + string(msg.Payload()) + "\")"
 	fmt.Println(output0)
+	fmt.Println(output0)
+	fmt.Println(output0)
+	fmt.Println(output0)
+	fmt.Println(output0)
+	fmt.Println(output0)
+	fmt.Println(output0)
+	fmt.Println(output0)
+	fmt.Println(output0)
+	fmt.Println(output0)
+	fmt.Println(output0)
 
 	this.controll("Direction", string(msg.Payload()))
 }
