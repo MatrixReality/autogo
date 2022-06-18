@@ -73,11 +73,6 @@ func main() {
 	http.ListenAndServe(*addr, nil)
 
 	messageBroker.Sub("autogo/tank-01/sonar", defaultReceiver)
-
-	//log.Fatal(http.ListenAndServe(*addr, nil))
-	//http.ListenAndServe(":8082", nil)
-	//mosquitto_sub -h 7966f46d27eb47699c2b44744c43135c.s1.eu.hivemq.cloud -p 8883 -u autogo2 -P D3c3pt1c0n -t 'autogo/tank-01/move'
-	//mosquitto_pub -h 7966f46d27eb47699c2b44744c43135c.s1.eu.hivemq.cloud -p 8883 -u autogo2 -P D3c3pt1c0n -t 'autogo/tank-01/move' -m 'Hello'
 }
 
 func defaultReceiver(client mqtt.Client, msg mqtt.Message) {

@@ -25,8 +25,8 @@ func (this *LCD) ShowMessage(message string, line int) {
 	if this.MessageBroker != nil {
 		var (
 			pubMsg = map[string]string{
-				"message": message,
-				"line":    fmt.Sprint(line),
+				"text": message,
+				"line": fmt.Sprint(line),
 			}
 		)
 

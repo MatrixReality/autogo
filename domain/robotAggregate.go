@@ -123,6 +123,9 @@ func NewRobot(messageBroker *infrastructure.MessageBroker, motors *actuators.Mot
 		moveTopic := fmt.Sprintf("%s/%s/move", cfg.ProjectName, cfg.RobotName)
 		go messageBroker.Sub(moveTopic, this.MoveMessageHandler)
 
+		moveCamTopic := fmt.Sprintf("%s/%s/move_cam", cfg.ProjectName, cfg.RobotName)
+		go messageBroker.Sub(moveCamTopic, this.MoveCamMessageHandler)
+
 		testTopic := fmt.Sprintf("%s/%s/test", cfg.ProjectName, cfg.RobotName)
 		go messageBroker.Sub(testTopic, nil)
 
@@ -159,16 +162,15 @@ func (this *Robot) MoveMessageHandler(client mqtt.Client, msg mqtt.Message) {
 
 	output0 := "ROBOT:: this.Robot.Controll(\"Direction\", " + string(msg.Payload()) + "\")"
 	fmt.Println(output0)
-	fmt.Println(output0)
-	fmt.Println(output0)
-	fmt.Println(output0)
-	fmt.Println(output0)
-	fmt.Println(output0)
-	fmt.Println(output0)
-	fmt.Println(output0)
-	fmt.Println(output0)
-	fmt.Println(output0)
-	fmt.Println(output0)
 
 	this.controll("Direction", string(msg.Payload()))
+}
+
+func (this *Robot) MoveCamMessageHandler(client mqtt.Client, msg mqtt.Message) {
+	msg.Ack()
+
+	output0 := "ROBOT:: this.Robot.Controll(\"Cam\", " + string(msg.Payload()) + "\")"
+	fmt.Println(output0)
+
+	this.controll("Cam", string(msg.Payload()))
 }

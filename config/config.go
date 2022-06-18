@@ -58,6 +58,7 @@ type MessageBroker struct {
 	Host              string `mapstructure:"MESSAGEBROKER_HOST"`
 	Port              string `mapstructure:"MESSAGEBROKER_PORT"`
 	User              string `mapstructure:"MESSAGEBROKER_USER"`
+	ClientID          string `mapstructure:"MESSAGEBROKER_CLIENT_ID"`
 	Password          string `mapstructure:"MESSAGEBROKER_PASSWORD"`
 	WaitTTLDisconnect uint   `mapstructure:"MESSAGEBROKER_TTL_DISCONNECT_IN_MS"`
 }
